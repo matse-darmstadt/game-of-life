@@ -29,6 +29,8 @@ $(function () {
 	ctx.fillStyle = '#ffa700';
 	ctx.font = '18px Consolas';
 	
+	var connection;
+	
 	var gameState = false, tool = 0;
 	
 	var fieldsPerRow = 5;
@@ -137,9 +139,45 @@ $(function () {
 		});
 		
 		var play = function () {
-			gameState = refresh = true;
-			canvas.style.cursor = 'default';
-			canvas.style.borderColor = '#008744';
+			if (!connection) {
+				try {
+					
+					connection = new _.WebSocket('ws://' + prompt('Server IP:'));
+					
+					connection.onopen = function () {
+						connection.send('PLAY');
+					};
+					
+					connection.onclose = function () {
+						pause();
+						connection = null;
+						alert('Connection closed!');
+					};
+					
+					connection.onmessage = function (e) {
+						if (e.data == 'PLAY') {
+							gameState = refresh = true;
+							canvas.style.cursor = 'default';
+							canvas.style.borderColor = '#008744';
+						} else if (e.data == 'PAUSE') {
+							pause();
+						} else {
+							renderData = _.JSON.parse(e.data);
+							refresh = true;
+						}
+					};
+					
+					connection.onerror = function () {
+						pause();
+						connection = null;
+						alert('An error occured and the connection is closed!');
+					};
+					
+				} catch (exception) {
+					connection = null;
+					alert('An error occured and the connection is closed!');
+				}
+			}
 		};
 		
 		var pause = function () {
