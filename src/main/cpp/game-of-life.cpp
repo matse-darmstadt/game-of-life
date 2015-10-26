@@ -10,7 +10,7 @@
 #include "Server.h"
 #include <iostream>
 
-const int PORT_TEST = 1234;
+const int PORT_TEST = 1235;
 
 using namespace std;
 

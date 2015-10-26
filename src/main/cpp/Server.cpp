@@ -44,7 +44,6 @@ Server::Server(int port) {
 }
 
 Server::~Server() {
-	// TODO Auto-generated destructor stub
 }
 
 void Server::error(const char *msg) {
@@ -66,24 +65,48 @@ void Server::start() {
 			error("ERROR on accept");
 		}
 
+		// Receive some message up to 255 Bytes (Byte 255 stays '\0')
+		bzero(buffer, 256);
+		int n = read(newsockfd, buffer, 255);
+		if (n < 0) {
+			error("ERROR reading from socket");
+			break;
+		}
+		printf("Server received: %s\n", buffer);
+
+		// Response to the message
+		string response = "HTTP/1.1 200 OK\r\n";
+		n = write(newsockfd, response.c_str(), response.length());
+		if (n < 0) {
+			error("ERROR writing to socket");
+			break;
+		}
+
+		n = read(newsockfd, buffer, 255);
+		if (n < 0) {
+			error("ERROR reading from socket");
+			break;
+		}
+		printf("Server received: %s\n", buffer);
+		response = generateInitResponse(getKey(buffer));
+		if (response == "ERROR")
+		{
+			error("ERROR invalid request key");
+			break;
+		}
+		n = write(newsockfd, response.c_str(), response.length());
+		if (n < 0) {
+			error("ERROR writing to socket");
+			break;
+		}
+
 		while (true) {
-			// Receive some message up to 255 Bytes (Byte 255 stays '\0')
-			bzero(buffer, 256);
-			int n = read(newsockfd, buffer, 255);
+			n = read(newsockfd, buffer, 255);
 			if (n < 0) {
 				error("ERROR reading from socket");
 				break;
 			}
 			printf("Server received: %s\n", buffer);
-
-			// Response to the message
-
-			string response = generateInitResponse(getKey(buffer));
-			n = write(newsockfd, response.c_str(), response.length());
-			if (n < 0) {
-				error("ERROR writing to socket");
-				break;
-			}
 		}
 		close(newsockfd);
 	}
@@ -135,7 +158,10 @@ string Server::generateAcceptKey(string requestKey) {
 }
 
 string Server::generateInitResponse(string header) {
-	string acceptKey = generateAcceptKey(getKey(header));
+	string requestKey = getKey(header);
+	if (requestKey == "ERROR");
+		return "ERROR";
+	string acceptKey = generateAcceptKey(requestKey);
 
 	string response = "HTTP/1.1 101 Switching Protocols\n"
 			"Upgrade: websocket\n"
