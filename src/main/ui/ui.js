@@ -1,3 +1,18 @@
+var patterns = {
+	glider: {
+		x: [ -1, 1, 0, 1, 0 ],
+		y: [ -1, -1, 0, 0, 1 ]
+	},
+	rPentomino: {
+		x: [ 0, 1, -1, 0, 0 ],
+		y: [ -1, -1, 0, 0, 1 ]
+	},
+	bomb: {
+		x: [ -1, 0, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0, 1 ],
+		y: [ -3, -3, -3, -2, -2, -1, -1, 1, 1, 2, 2, 3, 3, 3 ]
+	}
+};
+
 $(function () {
 	var _ = window || this;
 	
@@ -16,7 +31,13 @@ $(function () {
 	
 	var gameState = false, tool = 0;
 	
-	var fieldSize = 20;
+	var fieldsPerRow = 5;
+	
+	var tmp = Number(prompt('How many fields per row do you want?'));
+	if (tmp === tmp && tmp > fieldsPerRow)
+		fieldsPerRow = tmp;
+	
+	var fieldSize = _.Math.round(canvas.width / fieldsPerRow);
 	
 	var render, renderMethod, renderFrame, refresh = true, possibleRenderMethods = [
 		'requestAnimationFrame',
@@ -25,8 +46,8 @@ $(function () {
 		'oRequestAnimationFrame',
 		'msRequestAnimationFrame'
 	], renderData = {
-		height: (canvas.height / fieldSize) | 0,
-		width: (canvas.width / fieldSize) | 0,
+		height: _.Math.round(canvas.height / fieldSize),
+		width: _.Math.round(canvas.width / fieldSize),
 		x: [],
 		y: []
 	};
@@ -59,6 +80,33 @@ $(function () {
 			renderFrame = renderMethod(render);
 		})();
 		
+		var createPattern = function (px, py, x, y, pattern) {
+			var ox, oy;
+			for (var index = 0, length = pattern.x.length; index != length; ++index)
+				if (fieldExists(px + (ox = pattern.x[index]) * fieldSize, py + (oy = pattern.y[index]) * fieldSize) == false)
+					createField(x + ox, y + oy);
+		};
+		
+		var fieldExists = function (px, py) {
+			if (px < 0 || py < 0)
+				return undefined;
+			return ctx.getImageData(px, py, 1, 1).data.join('') != '0000';
+		};
+		
+		var createField = function (x, y) {
+			renderData.x.push(x);
+			renderData.y.push(y);
+		};
+		
+		var deleteField = function (x, y) {
+			for (var index = 0, length = renderData.x.length; index != length; ++index)
+				if (renderData.x[index] == x && renderData.y[index] == y) {
+					renderData.x.splice(index, 1);
+					renderData.y.splice(index, 1);
+					break;
+				}
+		};
+		
 		var useTool = function (px, py) {
 			if (gameState)
 				return;
@@ -66,23 +114,14 @@ $(function () {
 			var x = (px / fieldSize) | 0;
 			var y = (py / fieldSize) | 0;
 			
-			var value = ctx.getImageData(px, py, 1, 1).data.join('');
+			var exists = fieldExists(px, py);
 			
-			if (tool == 0 && value == '0000') {
-				
-				renderData.x.push(x);
-				renderData.y.push(y);
-				
-			} else if (tool == 1 && value != '0000') {
-				
-				for (var index = 0, length = renderData.x.length; index != length; ++index)
-					if (renderData.x[index] == x && renderData.y[index] == y) {
-						renderData.x.splice(index, 1);
-						renderData.y.splice(index, 1);
-						break;
-					}
-					
-			}
+			if (tool == 0 && exists == false)
+				createField(x, y);
+			else if (tool == 1 && exists)
+				deleteField(x, y);
+			else if (tool instanceof Object)
+				createPattern(px, py, x, y, tool);
 			
 			refresh = true;
 		};
@@ -122,6 +161,21 @@ $(function () {
 		$('#erase-button').click(function () {
 			pause();
 			tool = 1;
+		});
+		
+		$('#spawn-glider-button').click(function () {
+			pause();
+			tool = patterns.glider;
+		});
+		
+		$('#spawn-r-pentomino').click(function () {
+			pause();
+			tool = patterns.rPentomino;
+		});
+		
+		$('#spawn-bomb').click(function () {
+			pause();
+			tool = patterns.bomb;
 		});
 	} else
 		_.alert('NO RENDER METHOD FOUND');
