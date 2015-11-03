@@ -1,20 +1,50 @@
 var patterns = {
-	glider: {
+	Glider: {
 		x: [ -1, 1, 0, 1, 0 ],
 		y: [ -1, -1, 0, 0, 1 ]
 	},
-	rPentomino: {
+	'r-Pentomino': {
 		x: [ 0, 1, -1, 0, 0 ],
 		y: [ -1, -1, 0, 0, 1 ]
 	},
-	bomb: {
+	Bomb: {
 		x: [ -1, 0, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0, 1 ],
 		y: [ -3, -3, -3, -2, -2, -1, -1, 1, 1, 2, 2, 3, 3, 3 ]
 	}
 };
 
+function deleteAllCookies() {
+    var cookies = document.cookie.split(";");
+
+    for (var i = 0; i < cookies.length; i++) {
+    	var cookie = cookies[i];
+    	var eqPos = cookie.indexOf("=");
+    	var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    	document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
+}
+
 $(function () {
 	var _ = window || this;
+
+	_.createPattern = function (name, pattern)  {
+				
+		var option = _.document.createElement('OPTION');
+		
+		option.setAttribute('value', name);
+		option.textContent = name;
+		
+		$('#spawn-pattern-dropdown').append(option);
+		
+	};
+	
+	var cookie = _.document.cookie;
+	
+	if (cookie)
+		_.patterns = _.JSON.parse(cookie.split(';')[0].split('=')[1]);
+	
+	for (name in _.patterns)
+		_.createPattern(name, _.patterns[name]);
 	
 	var canvas = $('#canvas').get(0);
 	canvas.style.cursor = 'crosshair';
@@ -22,24 +52,35 @@ $(function () {
 			
 	var container = $('#canvas-container');
 	
+	var offset = $(canvas).offset();
+	
 	canvas.width = container.width() - 8;
 	canvas.height = container.height() - 8;
 	
 	var ctx = canvas.getContext('2d');
 	ctx.fillStyle = '#ffa700';
-	ctx.font = '18px Consolas';
+	ctx.strokeStyle = '#fff';
 	
 	var connection;
 	
-	var gameState = false, tool = 0;
+	var gameState = false;
 	
-	var fieldsPerRow = 5;
+	_.tool = 0;
+	
+	var fieldsPerRow = 50;
 	
 	var tmp = Number(prompt('How many fields per row do you want?'));
 	if (tmp === tmp && tmp > fieldsPerRow)
 		fieldsPerRow = tmp;
 	
 	var fieldSize = _.Math.round(canvas.width / fieldsPerRow);
+	
+	var mousePos = {
+		px: null,
+		py: null,
+		x: null,
+		y: null
+	};
 	
 	var render, renderMethod, renderFrame, refresh = true, possibleRenderMethods = [
 		'requestAnimationFrame',
@@ -50,8 +91,7 @@ $(function () {
 	], renderData = {
 		height: _.Math.round(canvas.height / fieldSize),
 		width: _.Math.round(canvas.width / fieldSize),
-		x: [],
-		y: []
+		populatedFields: []
 	};
 	
 	for (var index = 0, length = possibleRenderMethods.length; index != length; ++index)
@@ -70,8 +110,11 @@ $(function () {
 				
 				try {
 					
-					for (var index = 0, length = renderData.x.length; index != length; ++index)
-						ctx.fillRect(renderData.x[index] * fieldSize, renderData.y[index] * fieldSize, fieldSize, fieldSize);
+					for (var index = 0, length = renderData.populatedFields.length; index != length; ++index)
+						ctx.fillRect(renderData.populatedFields[index] * fieldSize, renderData.populatedFields[++index] * fieldSize, fieldSize, fieldSize);
+					
+					if (mousePos.x != null && mousePos.y != null)
+						ctx.strokeRect(mousePos.x * fieldSize, mousePos.y * fieldSize, fieldSize, fieldSize);
 					
 				} catch (exception) {
 					console.log(exception);
@@ -92,21 +135,20 @@ $(function () {
 		var fieldExists = function (px, py) {
 			if (px < 0 || py < 0)
 				return undefined;
-			return ctx.getImageData(px, py, 1, 1).data.join('') != '0000';
+			return ctx.getImageData(px, py, 1, 1).data.join('') == '2551670255';
 		};
 		
 		var createField = function (x, y) {
-			renderData.x.push(x);
-			renderData.y.push(y);
+			renderData.populatedFields.push(x);
+			renderData.populatedFields.push(y);
 		};
 		
 		var deleteField = function (x, y) {
-			for (var index = 0, length = renderData.x.length; index != length; ++index)
-				if (renderData.x[index] == x && renderData.y[index] == y) {
-					renderData.x.splice(index, 1);
-					renderData.y.splice(index, 1);
+			for (var index = 0, length = renderData.populatedFields.length; index != length; index += 2)
+				if (renderData.populatedFields[index] == x && renderData.populatedFields[index + 1] == y) {
+					renderData.populatedFields.splice(index, 2);
 					break;
-				}
+				}	
 		};
 		
 		var useTool = function (px, py) {
@@ -118,12 +160,12 @@ $(function () {
 			
 			var exists = fieldExists(px, py);
 			
-			if (tool == 0 && exists == false)
+			if (_.tool == 0 && exists == false)
 				createField(x, y);
-			else if (tool == 1 && exists)
+			else if (_.tool == 1 && exists)
 				deleteField(x, y);
-			else if (tool instanceof Object)
-				createPattern(px, py, x, y, tool);
+			else if (_.tool instanceof Object)
+				createPattern(px, py, x, y, _.tool);
 			
 			refresh = true;
 		};
@@ -131,44 +173,77 @@ $(function () {
 		$(canvas).click(function (e) {
 			try {
 				
-				useTool(e.clientX - 32, e.clientY - 32);
+				mousePos.x = mousePos.y = null;
+				
+				useTool(e.clientX - offset.left, e.clientY - offset.top);
 			
 			} catch (exception) {
 				console.log(exception);
 			}
+		}).mousemove(function (e) {
+			
+			if (gameState)
+				return;
+			
+			mousePos.px = e.clientX - offset.left;
+			mousePos.py = e.clientY - offset.top;
+			
+			if (!fieldExists(mousePos.px, mousePos.py)) {
+				mousePos.x = (mousePos.px / fieldSize) | 0;
+				mousePos.y = (mousePos.py / fieldSize) | 0;
+			} else
+				mousePos.x = mousePos.y = null;
+			
+			refresh = true;
+			
+		}).mouseleave(function () {
+			
+			mousePos.x = mousePos.y = null;
+			
+			refresh = true;
+			
 		});
+		
+		var setPauseFrame = function () {
+			gameState = false;
+			refresh = true;
+			canvas.style.cursor = 'crosshair';
+			canvas.style.borderColor = '#d62d20';
+		};
 		
 		var play = function () {
 			if (!connection) {
 				try {
 					
-					connection = new _.WebSocket('ws://' + prompt('Server IP:'));
+					//connection = new _.WebSocket('wss://' + prompt('Hostname:'));
+					connection = new _.WebSocket('wss://echo.websocket.org');
 					
 					connection.onopen = function () {
 						connection.send('PLAY');
 					};
 					
 					connection.onclose = function () {
-						pause();
+						setPauseFrame();
 						connection = null;
 						alert('Connection closed!');
 					};
 					
 					connection.onmessage = function (e) {
 						if (e.data == 'PLAY') {
+							mousePos.x = mousePos.y = null;
 							gameState = refresh = true;
 							canvas.style.cursor = 'default';
 							canvas.style.borderColor = '#008744';
-						} else if (e.data == 'PAUSE') {
-							pause();
-						} else {
+						} else if (e.data == 'PAUSE')
+							setPauseFrame();
+						else {
 							renderData = _.JSON.parse(e.data);
 							refresh = true;
 						}
 					};
 					
 					connection.onerror = function () {
-						pause();
+						_.pause();
 						connection = null;
 						alert('An error occured and the connection is closed!');
 					};
@@ -177,44 +252,46 @@ $(function () {
 					connection = null;
 					alert('An error occured and the connection is closed!');
 				}
-			}
+			} else
+				connection.send('PLAY');
 		};
 		
-		var pause = function () {
-			gameState = false;
-			refresh = true;
-			canvas.style.cursor = 'crosshair';
-			canvas.style.borderColor = '#d62d20';
+		_.pause = function () {
+			if (connection && gameState)
+				connection.send('PAUSE');
 		};
 		
 		$('#play-button').click(play);
 		
-		$('#pause-button').click(pause);
+		$('#pause-button').click(_.pause);
 		
 		$('#populate-button').click(function () {
-			pause();
-			tool = 0;
+			_.pause();
+			_.tool = 0;
 		});
 		
 		$('#erase-button').click(function () {
-			pause();
-			tool = 1;
+			_.pause();
+			_.tool = 1;
 		});
 		
-		$('#spawn-glider-button').click(function () {
-			pause();
-			tool = patterns.glider;
+		$('#clear-button').click(function () {
+			_.pause();
+			renderData.populatedFields = [];
+			refresh = true;
 		});
 		
-		$('#spawn-r-pentomino').click(function () {
-			pause();
-			tool = patterns.rPentomino;
+		$('#pattern-creator').resize();
+		
+		$('#create-pattern').click(function () {
+			$('#pattern-creator').show();
 		});
 		
-		$('#spawn-bomb').click(function () {
-			pause();
-			tool = patterns.bomb;
+		$('#spawn-pattern').click(function () {
+			_.pause();
+			_.tool = _.patterns[$('#spawn-pattern-dropdown').val()];
 		});
+		
 	} else
 		_.alert('NO RENDER METHOD FOUND');
 });

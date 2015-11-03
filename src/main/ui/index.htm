@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="ui.css" />
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 	<script type="text/javascript" src="ui.js"></script>
+	<script type="text/javascript" src="patternCreator.js"></script>
 </head>
 <body>
 	<div id="ui">
@@ -27,14 +28,39 @@
 			<span id="erase-button" class="button">
 				Erase
 			</span>
-			<span id="spawn-glider-button" class="button">
-				Spawn Glider
+			<span id="clear-button" class="button">
+				Clear
 			</span>
-			<span id="spawn-r-pentomino" class="button">
-				Spawn r-Pentomino
+			<span id="create-pattern" class="button">
+				Create Pattern
 			</span>
-			<span id="spawn-bomb" class="button">
-				Spawn Bomb
+			<span id="spawn-pattern" class="button">
+				Spawn Pattern:
+			</span>
+			<select id="spawn-pattern-dropdown">
+			</select>
+		</div>
+	</div>
+	<div id="pattern-creator">
+		<div id="pattern-creator-canvas-container">
+			<canvas id="pattern-creator-canvas">
+			</canvas>
+		</div>
+		<div id="pattern-creator-toolbar">
+			<span id="pattern-creator-populate-button" class="button">
+				Populate
+			</span>
+			<span id="pattern-creator-erase-button" class="button">
+				Erase
+			</span>
+			<span id="pattern-creator-clear-button" class="button">
+				Clear
+			</span>
+			<span id="pattern-creator-save-button" class="button">
+				Save
+			</span>
+			<span id="pattern-creator-cancel-button" class="button">
+				Cancel
 			</span>
 		</div>
 	</div>
