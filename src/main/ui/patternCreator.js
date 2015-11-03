@@ -167,6 +167,9 @@ $(function () {
 		$('#pattern-creator-save-button').click(function () {
 			var name = prompt('Pattern name:');
 			
+			if (!name || name.trim() == '')
+				return;
+			
 			var pattern = _.patterns[name] = {
 				x: [],
 				y: []
