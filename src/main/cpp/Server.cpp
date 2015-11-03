@@ -63,6 +63,7 @@ void Server::start() {
 		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 		if (newsockfd < 0) {
 			error("ERROR on accept");
+			continue;
 		}
 
 		// Receive some message up to 255 Bytes (Byte 255 stays '\0')
@@ -70,6 +71,7 @@ void Server::start() {
 		int n = read(newsockfd, buffer, 255);
 		if (n < 0) {
 			error("ERROR reading from socket");
+			close(newsockfd);
 			break;
 		}
 		printf("Server received: %s\n", buffer);
@@ -79,24 +81,28 @@ void Server::start() {
 		n = write(newsockfd, response.c_str(), response.length());
 		if (n < 0) {
 			error("ERROR writing to socket");
+			close(newsockfd);
 			break;
 		}
 
 		n = read(newsockfd, buffer, 255);
 		if (n < 0) {
 			error("ERROR reading from socket");
+			close(newsockfd);
 			break;
 		}
 		printf("Server received: %s\n", buffer);
-		response = generateInitResponse(getKey(buffer));
+		response = generateInitResponse(buffer);
 		if (response == "ERROR")
 		{
 			error("ERROR invalid request key");
+			close(newsockfd);
 			break;
 		}
 		n = write(newsockfd, response.c_str(), response.length());
 		if (n < 0) {
 			error("ERROR writing to socket");
+			close(newsockfd);
 			break;
 		}
 
@@ -106,7 +112,7 @@ void Server::start() {
 				error("ERROR reading from socket");
 				break;
 			}
-			printf("Server received: %s\n", buffer);
+			printf("Received message:\n %s\n", buffer);
 		}
 		close(newsockfd);
 	}
@@ -159,7 +165,7 @@ string Server::generateAcceptKey(string requestKey) {
 
 string Server::generateInitResponse(string header) {
 	string requestKey = getKey(header);
-	if (requestKey == "ERROR");
+	if (requestKey == "ERROR")
 		return "ERROR";
 	string acceptKey = generateAcceptKey(requestKey);
 
