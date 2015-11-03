@@ -8,21 +8,31 @@
  */
 
 #include "Server.h"
+
+#include <signal.h>
 #include <iostream>
 
-const int PORT_TEST = 1235;
+const int PORT_TEST = 1233;
 
 using namespace std;
 
+Server srv(PORT_TEST);
+
+void signalHandler(int signal) {
+	cout << "Received signal " << signal << endl;
+	srv.shutDown();
+	exit (signal);
+}
+
 int main(int argc, char *argv[]) {
 
-
-	Server srv(PORT_TEST);
+	signal(SIGINT, signalHandler);
+	signal(SIGKILL, signalHandler);
+	signal(SIGQUIT, signalHandler);
 
 	srv.test();
 
 	srv.start();
-
 
 	return 0;
 }

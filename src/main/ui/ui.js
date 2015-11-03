@@ -139,13 +139,14 @@ $(function () {
 		});
 		
 		var play = function () {
-			if (!connection) {
+			if (!connection || connection == null) {
 				try {
 					
-					connection = new _.WebSocket('ws://' + prompt('Server IP:'));
-					
+					//connection = new _.WebSocket('ws://' + prompt('Server IP:'));
+					connection = new _.WebSocket('ws://localhost:1233');
 					connection.onopen = function () {
-						connection.send('PLAY');
+						//connection.send('PLAY');
+						connection.send('PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____');
 					};
 					
 					connection.onclose = function () {

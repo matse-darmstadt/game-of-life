@@ -18,9 +18,12 @@ public:
 	virtual ~Server();
 	void start();
 	void test();
+
+	void shutDown();
 private:
 	void error(const char *msg);
 	int sockfd;
+	bool running;
 	string getKey(string header);
 	string generateAcceptKey(string requestKey);
 	string generateInitResponse(string requestHeader);

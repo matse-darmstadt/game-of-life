@@ -6,6 +6,7 @@
  */
 
 #include "Server.h"
+#include "WebsocketMessage.h"
 
 #include <netinet/in.h>
 #include <stddef.h>
@@ -20,7 +21,8 @@
 #include "lib/sha1.h"
 #include "lib/base64.h"
 
-Server::Server(int port) {
+Server::Server(int port) :
+		running(true) {
 
 	struct sockaddr_in serv_addr;
 
@@ -54,9 +56,9 @@ void Server::error(const char *msg) {
 void Server::start() {
 	int newsockfd;
 	socklen_t clilen;
-	char buffer[256];
+	char buffer[9000];
 	struct sockaddr_in cli_addr;
-	while (true) {
+	while (running) {
 		listen(sockfd, 5);
 
 		clilen = sizeof(cli_addr);
@@ -66,56 +68,63 @@ void Server::start() {
 			continue;
 		}
 
-		// Receive some message up to 255 Bytes (Byte 255 stays '\0')
-		bzero(buffer, 256);
-		int n = read(newsockfd, buffer, 255);
+		printf("Client connected");
+		bzero(buffer, sizeof(buffer));
+		int n = read(newsockfd, buffer, sizeof(buffer));
+		std::string response;
 		if (n < 0) {
 			error("ERROR reading from socket");
-			close(newsockfd);
-			break;
+			goto disconnect;
 		}
-		printf("Server received: %s\n", buffer);
+		printf("\nServer received: %s\n", buffer);
 
 		// Response to the message
-		string response = "HTTP/1.1 200 OK\r\n";
-		n = write(newsockfd, response.c_str(), response.length());
-		if (n < 0) {
-			error("ERROR writing to socket");
-			close(newsockfd);
-			break;
-		}
-
-		n = read(newsockfd, buffer, 255);
-		if (n < 0) {
-			error("ERROR reading from socket");
-			close(newsockfd);
-			break;
-		}
-		printf("Server received: %s\n", buffer);
 		response = generateInitResponse(buffer);
-		if (response == "ERROR")
-		{
+		printf("\nSecond response sent: %s\n", response.c_str());
+		if (response == "ERROR") {
 			error("ERROR invalid request key");
-			close(newsockfd);
-			break;
+			goto disconnect;
 		}
 		n = write(newsockfd, response.c_str(), response.length());
+		//n = write(newsockfd, buffer, sizeof(buffer));
 		if (n < 0) {
 			error("ERROR writing to socket");
-			close(newsockfd);
-			break;
+			goto disconnect;
 		}
 
-		while (true) {
-			n = read(newsockfd, buffer, 255);
+		while (running) {
+			n = read(newsockfd, buffer, sizeof(buffer));
+			if (n == 0) {
+				break;
+			}
 			if (n < 0) {
 				error("ERROR reading from socket");
 				break;
 			}
+			buffer[n] = '\0';
 			printf("Received message:\n %s\n", buffer);
+
+			WebSocketHeader* wsh = reinterpret_cast<WebSocketHeader*>(buffer);
+			wsh->print();
+
+			if (wsh->getOpCode() == OPCODE_TEXT) {
+				cout << "\npayload length: " << (int) wsh->getPayloadLength()
+						<< endl;
+				cout << "\npayload: " << wsh->getPayload() << endl;
+			} else if (wsh->getOpCode() == OPCODE_DISCONNECT) {
+				goto disconnect;
+			}
+
 		}
-		close(newsockfd);
+		disconnect: close(newsockfd);
+		printf("Client disconnected\n");
 	}
+
+	close(sockfd);
+}
+
+void Server::shutDown() {
+	running = false;
 
 	close(sockfd);
 }
@@ -158,7 +167,7 @@ string Server::generateAcceptKey(string requestKey) {
 
 	size_t encoded_size = 0;
 	char* encoded = base64_encode(buffer, size, encoded_size);
-	string acceptKey = encoded;
+	string acceptKey(encoded, encoded_size);
 	free(encoded);
 	return acceptKey;
 }
@@ -169,19 +178,18 @@ string Server::generateInitResponse(string header) {
 		return "ERROR";
 	string acceptKey = generateAcceptKey(requestKey);
 
-	string response = "HTTP/1.1 101 Switching Protocols\n"
-			"Upgrade: websocket\n"
-			"Connection: Upgrade\n"
+	string response = "HTTP/1.1 101 Switching Protocols\r\n"
+			"Upgrade: websocket\r\n"
+			"Connection: Upgrade\r\n"
 			"Sec-WebSocket-Accept: ";
 
 	response += acceptKey;
 	response +=
-			"\n"
-					"Sec-WebSocket-Protocol: chat\n"
-					"Access-Control-Allow-Origin: *\n"
-					"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
-					"Access-Control-Allow-Headers: Content-Type\n"
-					"Access-Control-Request-Headers: X-Requested-With, accept, content-type\n";
+			"\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
+					"Access-Control-Request-Headers: X-Requested-With, accept, content-type\r\n\r\n";
 
 	return response;
 }
