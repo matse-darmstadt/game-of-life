@@ -25,12 +25,21 @@ private:
 	bool** boardOfLife;
 	
 	vector<Position> populatedFields;
+
+	Board(uint rangeX, uint rangeY);
+
+	void setPopulatedFields(vector<uint> populatedX, vector<uint> populatedY);
+	
+	void killAllFields();
+	
+	void reviveField(uint x,uint y);
+
+
 public:
-	static void fromJson(string json);
 
-	Board(uint rangeX, uint rangeY, vector<uint> populatedX, vector<uint> populatedY);
+	static Board* fromJson(string json);
 
-	void setPopulatedBoards(vector<uint> populatedX, vector<uint> populatedY);
+	void setPopulatedFields(string json);
 	
 
 	// Wir setzen die Verknüpfungen zwischen den Feldern (Bildschirmen)

@@ -1,9 +1,7 @@
 #include "Position.h"
 
-Position::Position(uint x, uint y)	//"Position::" gibt an, dass sich
+Position::Position(uint x, uint y): x(x), y(y)	//"Position::" gibt an, dass sich
 {
-	this->x = x;
-	this->y = y;
 }
 
 bool Position::operator==(Position other)

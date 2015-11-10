@@ -15,7 +15,7 @@ void simpleTest()
 {
 	vector<uint> livingX, livingY, firstHalfX, secondHalfX, firstHalfY, secondHalfY;
 	uint size = 10;
-	Board emptyBoard(size,size, livingX,livingY);
+	Board emptyBoard(size,size);
 	assert(emptyBoard.calculateNextStep().size()==0);
 
 	for(uint i = 0; i <size; i++)
@@ -28,7 +28,8 @@ void simpleTest()
 	}
 
 
-	Board boardFullOfLive(size,size, livingX, livingY);
+	Board boardFullOfLive(size,size);
+	boardFullOfLive.setPopulatedBoards(livingX, livingY);
 	assert(boardFullOfLive.calculateNextStep().size()==4);
 }
 
@@ -46,8 +47,10 @@ void twoBoardsTest1()
 	secondHalfX.push_back(0);
 	secondHalfY.push_back(1);
 
-	Board firstHalfOfLive(size, size, firstHalfX, firstHalfY);
-	Board secondHalfOfLive(size,size, secondHalfX, secondHalfY);
+	Board firstHalfOfLive(size, size);
+	firstHalfOfLive.setPopulatedBoards(firstHalfX, firstHalfY);
+	Board secondHalfOfLive(size,size);
+	secondHalfOfLive.setPopulatedBoards(secondHalfX, secondHalfY);
 
 	assert(firstHalfOfLive.calculateNextStep().size()==0);
 	assert(secondHalfOfLive.calculateNextStep().size()==0);
@@ -78,8 +81,10 @@ void twoBoardsTest2()
 		}
 	}
 		// Boards zum Testen erstellen
-	Board secondHalfOfLive(size,size, secondHalfX, secondHalfY);
-	Board firstHalfOfLive(size, size, firstHalfX, firstHalfY);
+	Board firstHalfOfLive(size, size);
+	firstHalfOfLive.setPopulatedBoards(firstHalfX, firstHalfY);
+	Board secondHalfOfLive(size,size);
+	secondHalfOfLive.setPopulatedBoards(secondHalfX, secondHalfY);
 		//Nachprüfen ob nach einem Schritt die Ecken noch "leben"
 	assert(secondHalfOfLive.calculateNextStep().size()==4);
 	assert(firstHalfOfLive.calculateNextStep().size()==4);	
@@ -102,8 +107,7 @@ void boardTests()						// unit Tests
 	twoBoardsTest2();
 }
 
-
-uint main(uint argc, char* argv[])
+/* uint main(uint argc, char* argv[])
 {
 	//boardTests();
 
@@ -114,5 +118,5 @@ uint main(uint argc, char* argv[])
 	std::getchar();
 
 	return 0;
-}
+}*/
 
