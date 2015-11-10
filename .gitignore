@@ -27,3 +27,9 @@
 *.out
 *.app
 /Debug/
+Debug
+*.sdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
