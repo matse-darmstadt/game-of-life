@@ -3,6 +3,8 @@
 #include "../libs/sha1.h"
 #include "../libs/base64.h"
 
+#include "webSocketMessage.h"
+
 const string SOCKET_KEY_TITLE = "Sec-WebSocket-Key: ";
 const size_t KEY_LENGTH = 24;
 const string WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -27,11 +29,9 @@ void webSocketConnection::start()
 		if (error)
 			return;
 
-		cout << "Received message length: " << length << "\r\n";
-
 		readBuffer[length] = '\0';
 
-		cout << "\r\nRequest:\r\n" << readBuffer;
+		cout << "Request:\r\n" << readBuffer;
 
 		writeData = generateInitialResponse(readBuffer);
 
@@ -82,7 +82,7 @@ string webSocketConnection::generateInitialResponse(string requestHeader)
 	if (requestKey == "ERROR")
 		return "ERROR";
 
-	string response = "HTTP / 1.1 101 Switching Protocols\r\n"
+	string response = "HTTP/1.1 101 Switching Protocols\r\n"
 		"Upgrade: websocket\r\n"
 		"Connection: Upgrade\r\n"
 		"Sec-WebSocket-Accept: " + generateAcceptKey(requestKey) + "\r\n"
@@ -95,16 +95,14 @@ string webSocketConnection::generateInitialResponse(string requestHeader)
 }
 
 webSocketConnection::webSocketConnection(boost::asio::io_service& ioService)
-	: socket(ioService)
-{
-}
+	: socket(ioService) { }
 
 void webSocketConnection::handleWrite(const boost::system::error_code& error, size_t length)
 {
 	if (error)
 		return;
 
-	cout << "\r\nResponse:\r\n" << writeData;
+	cout << "\r\nResponse:\r\n" << writeData << "\r\n";
 
 	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
@@ -117,11 +115,11 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 	if (error)
 		return;
 
-	readBuffer[length] = '\0';
+	webSocketMessage msg(readBuffer);
 
-	cout << "\r\nRequest:\r\n" << readBuffer;
+	cout << "\r\nRequest:\r\n" << msg.getPayload() < "\r\n";
 
-	writeData = generateInitialResponse(readBuffer);
+	writeData = "ANSWER";
 
 	boost::asio::async_write(socket, boost::asio::buffer(writeData),
 		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
