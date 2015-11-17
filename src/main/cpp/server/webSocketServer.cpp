@@ -22,7 +22,7 @@ void webSocketServer::handleAccept(webSocketConnection::webSocketConnectionPoint
 {
 	if (!error)
 	{
-		//newConnection->test();
+		newConnection->test();
 		newConnection->start();
 	}
 

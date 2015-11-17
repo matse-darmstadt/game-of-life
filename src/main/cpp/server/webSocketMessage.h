@@ -4,7 +4,7 @@
 
 #include <string>
 
-#define ulong unsigned long
+#define ulong unsigned long long
 #define uchar unsigned char
 #define uint unsigned int
 #define ushort unsigned short
@@ -21,6 +21,20 @@ public:
 	string getPayload();
 
 	char* data;
+
+	ulong getLength();
+
+	ulong getHeaderLength();
+
+	void setPayload(string payload);
+
+	bool isMasked();
+
+	void setMasked(bool masked);
+
+	void setPayloadLength(ulong length);
+
+	void cOutFlags();
 };
 
 #endif

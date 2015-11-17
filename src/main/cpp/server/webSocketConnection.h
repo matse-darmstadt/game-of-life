@@ -7,6 +7,8 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 
+#include "webSocketMessage.h"
+
 using boost::asio::ip::tcp;
 
 using namespace std;
@@ -32,17 +34,15 @@ private:
 
 	void handleRead(const boost::system::error_code& error, size_t length);
 
-	string generateInitialResponse(string requestHeader);
+	uint generateInitialResponse(char* requestHeader);
 
 	string generateAcceptKey(string requestKey);
 
-	string getRequestKey(string requestHeader);
+	string getRequestKey(char* requestHeader);
 
 	tcp::socket socket;
 
-	char readBuffer[9000];
-
-	string writeData;
+	char buffer[9000];
 };
 
 #endif WEB_SOCKET_CONNECTION
