@@ -2,6 +2,7 @@
 
 #include "../libs/sha1.h"
 #include "../libs/base64.h"
+#include <iostream>
 
 
 const char SOCKET_KEY_TITLE[]  = "Sec-WebSocket-Key: ";
