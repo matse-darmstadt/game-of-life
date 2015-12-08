@@ -1,8 +1,13 @@
 #include "webSocketMessage.h"
-
+#ifdef __LINUX
+#include <endian.h>
+#define htonll htobe64
+#else
 #include <WinSock2.h>
+#endif
 #include <boost/asio.hpp>
 #include <bitset>
+#include <iostream>
 
 webSocketMessage::webSocketMessage(char* data)
 	: data(data) { }
