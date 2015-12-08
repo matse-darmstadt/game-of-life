@@ -30,6 +30,8 @@ public:
 private:
 	webSocketConnection(boost::asio::io_service& ioService);
 
+	void handleInitialWrite(const boost::system::error_code& error, size_t length);
+
 	void handleWrite(const boost::system::error_code& error, size_t length);
 
 	void handleRead(const boost::system::error_code& error, size_t length);

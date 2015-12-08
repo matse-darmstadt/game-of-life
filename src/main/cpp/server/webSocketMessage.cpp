@@ -28,30 +28,17 @@ ulong webSocketMessage::getPayloadLength()
 
 string webSocketMessage::getPayload()
 {
+	if (!isMasked())
+		return string(data + getHeaderLength(), getPayloadLength());
+
 	ulong length = getPayloadLength();
 
 	char* tmp = reinterpret_cast<char*>(alloca(length));
 
-	if (length <= 125) {
-		uchar* payload = reinterpret_cast<uchar*>(data) + 6;
-		uchar* mask = reinterpret_cast<uchar*>(data) + 2;
-		for (uint i = 0; i != length; i++)
-			tmp[i] = payload[i] ^ mask[i % 4];
-	}
-
-	if (length == 126) {
-		uchar* payload = reinterpret_cast<uchar*>(data) + 8;
-		uchar* mask = reinterpret_cast<uchar*>(data) + 2;
-		for (uint i = 0; i != length; i++)
-			tmp[i] = payload[i] ^ mask[i % 4];
-	}
-
-	if (length == 127) {
-		uchar* payload = reinterpret_cast<uchar*>(data) + 14;
-		uchar* mask = reinterpret_cast<uchar*>(data) + 2;
-		for (uint i = 0; i != length; i++)
-			tmp[i] = payload[i] ^ mask[i % 4];
-	}
+	uchar* payload = reinterpret_cast<uchar*>(data) + getHeaderLength();
+	uchar* mask = reinterpret_cast<uchar*>(data) + 2;
+	for (uint i = 0; i != length; i++)
+		tmp[i] = payload[i] ^ mask[i % 4];
 
 	return string(tmp, length);
 }
@@ -80,13 +67,6 @@ ulong webSocketMessage::getLength()
 	return getPayloadLength() + getHeaderLength();
 }
 
-bool webSocketMessage::isMasked()
-{
-	char secondByte = *(data+1);
-
-	return secondByte & (1 << 7);
-}
-
 void webSocketMessage::setPayloadLength(ulong length)
 {
 	uchar payloadLength = length;
@@ -106,25 +86,32 @@ void webSocketMessage::setPayloadLength(ulong length)
 	*(data + 1) = (isMasked() << 7) | payloadLength;
 }
 
+bool webSocketMessage::isMasked()
+{
+	char secondByte = *(data + 1);
+
+	return secondByte & (1 << 7);
+}
+
 void webSocketMessage::setMasked(bool masked)
 {
 	char& secondByte = *(data+1);
+
+	secondByte = secondByte & (0xff >> 1);
 
 	secondByte = secondByte | (masked << 7);
 }
 
 void webSocketMessage::setPayload(string payload)
 {
-	setPayloadLength(payload.size());
+	setPayloadLength(payload.size() + 1);
 
-	memcpy(data + getHeaderLength(), payload.c_str(), payload.size());
+	memcpy(data + getHeaderLength(), payload.c_str(), payload.size() + 1);
 }
 
 void webSocketMessage::cOutFlags()
 {
-	short firstByte = *(data);
+	short firstWord = *reinterpret_cast<short*>(data);
 
-	cout << "\r\nFIN: " << (bool)(firstByte & (1 << 7)) <<  endl;
-
-	cout << bitset<16>(firstByte) << endl;
+	cout << bitset<16>(firstWord) << endl;
 }

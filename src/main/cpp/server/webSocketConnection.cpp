@@ -18,6 +18,11 @@ tcp::socket& webSocketConnection::getSocket()
 	return socket;
 }
 
+webSocketConnection::webSocketConnection(boost::asio::io_service& ioService)
+	: socket(ioService) { }
+
+#pragma region Connection intializing
+
 void webSocketConnection::start()
 {
 	auto self = shared_from_this();
@@ -30,12 +35,12 @@ void webSocketConnection::start()
 
 		buffer[length] = '\0';
 
-		cout << "Request:\r\n" << buffer;
+		cout << "REQUEST\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
 
 		uint responseSize = generateInitialResponse(buffer);
 
 		boost::asio::async_write(socket, boost::asio::buffer(buffer, responseSize),
-			boost::bind(&webSocketConnection::handleWrite, self,
+			boost::bind(&webSocketConnection::handleInitialWrite, self,
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
 	});
@@ -50,7 +55,7 @@ string webSocketConnection::getRequestKey(char* requestHeader)
 
 	key += sizeof(SOCKET_KEY_TITLE);
 
-	return string(key-1, KEY_LENGTH);
+	return string(key - 1, KEY_LENGTH);
 }
 
 string webSocketConnection::generateAcceptKey(string requestKey)
@@ -95,21 +100,33 @@ uint webSocketConnection::generateInitialResponse(char* requestHeader)
 	return response.size() + 1;
 }
 
-webSocketConnection::webSocketConnection(boost::asio::io_service& ioService)
-	: socket(ioService) { }
-
-void webSocketConnection::handleWrite(const boost::system::error_code& error, size_t length)
+void webSocketConnection::handleInitialWrite(const boost::system::error_code& error, size_t length)
 {
 	if (error)
 		return;
-	webSocketMessage msg(buffer);
-	cout << "\r\nResponse:\r\n" << string(buffer, msg.getLength())  << "\r\n";
+
+	cout << "RESPONSE\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
 
 	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
+
+	/*webSocketMessage msg(buffer);
+
+	msg.setMasked(false);
+
+	msg.setPayload("HELLO");
+
+	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
+		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
+		boost::asio::placeholders::error,
+		boost::asio::placeholders::bytes_transferred));*/
 }
+
+#pragma endregion
+
+#pragma region Lifecycle
 
 void webSocketConnection::handleRead(const boost::system::error_code& error, size_t length)
 {
@@ -118,21 +135,48 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 
 	webSocketMessage msg(buffer);
 
-	cout << "\r\nMasked: " << msg.isMasked() << "\r\n";
+	cout << "REQUEST";
 
-	cout << "\r\nRequest:\r\n" << msg.getPayload() << "\r\n";
+	if (msg.isMasked())
+		cout << " MASKED";
+
+	cout << "\r\n-------------------------\r\n" << msg.getPayload() << "\r\n\r\n";
 
 	msg.setMasked(false);
 
-	msg.setPayload("ANSWER");
+	msg.setPayload("BLUBB\0");
+
+	cout << "\r\nPAYLOAD LENGTH: " << msg.getPayloadLength() << "\r\n";
 
 	msg.cOutFlags();
+
+	cout << "RESPONSE";
+
+	if (msg.isMasked())
+		cout << " MASKED";
+
+	cout << "\r\n-------------------------\r\n" << msg.getPayload() << "\r\n\r\n";
 
 	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
 		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
 }
+
+void webSocketConnection::handleWrite(const boost::system::error_code& error, size_t length)
+{
+	if (error)
+		return;
+
+	webSocketMessage msg(buffer);
+
+	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
+		boost::asio::placeholders::error,
+		boost::asio::placeholders::bytes_transferred));
+}
+
+#pragma endregion
 
 void webSocketConnection::test() {
 	char* EXAMPLE_REQUEST = "GET /chat HTTP/1.1\r\n"
