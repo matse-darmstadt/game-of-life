@@ -55,3 +55,34 @@ body {
 	.button:hover {
 		box-shadow: 0 0 2px 0 #848484;
 	}
+	
+#pattern-creator {
+	display: none;
+	position: relative;
+	background-color: #e7e7e7;
+	z-index: 100;
+	border: solid 1px #000;
+	width: 672px;
+	height: 723px;
+	margin: 0 auto;
+	padding: 16px;
+	padding-bottom: 8px;
+	margin-top: 64px;
+}
+
+#pattern-creator-canvas-container {
+	background-color: #4f4f4f;
+	overflow: hidden;
+	height: calc(100% - 51px);
+}
+
+#pattern-creator-toolbar {
+	height: 21px;
+	padding: 16px;
+	text-align: center;
+	margin-top: 2px;
+}
+
+#spawn-pattern-dropdown  {
+	min-width: 128px;
+}
