@@ -215,17 +215,10 @@ $(function () {
 			if (!connection || connection == null) {
 				try {
 					
-<<<<<<< HEAD
-					//connection = new _.WebSocket('ws://' + prompt('Server IP:'));
-					connection = new _.WebSocket('ws://localhost:1234');
-=======
-					//connection = new _.WebSocket('wss://' + prompt('Hostname:'));
-					connection = new _.WebSocket('wss://echo.websocket.org');
+					connection = new _.WebSocket('wss://' + prompt('Hostname:'));
 					
->>>>>>> origin/feature/ui
 					connection.onopen = function () {
-						//connection.send('PLAY');
-						connection.send('PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____');
+						connection.send('PLAY');
 					};
 					
 					connection.onclose = function () {
