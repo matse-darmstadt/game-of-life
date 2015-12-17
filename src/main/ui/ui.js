@@ -215,7 +215,7 @@ $(function () {
 			if (!connection || connection == null) {
 				try {
 					
-					connection = new _.WebSocket('wss://' + prompt('Hostname:'));
+					connection = new _.WebSocket('ws://' + prompt('Hostname:'));
 					
 					connection.onopen = function () {
 						connection.send('PLAY');

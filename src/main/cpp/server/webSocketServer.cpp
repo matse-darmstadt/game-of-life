@@ -1,7 +1,10 @@
 #include "webSocketServer.h"
+#include <iostream>
+
+using namespace std;
 
 webSocketServer::webSocketServer(boost::asio::io_service& ioService)
-	: acceptor(ioService, tcp::endpoint(tcp::v4(), 1234))
+	: acceptor(ioService, tcp::endpoint(tcp::v4(), 80))
 {
 	startAccept();
 }
@@ -23,6 +26,7 @@ void webSocketServer::handleAccept(webSocketConnection::webSocketConnectionPoint
 	if (!error)
 	{
 		//newConnection->test();
+		newConnection->setCallBack([](string msg){ cout << msg; });
 		newConnection->start();
 	}
 
