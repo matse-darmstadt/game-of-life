@@ -92,14 +92,17 @@ uint webSocketConnection::generateInitialResponse(char* requestHeader)
 		"Upgrade: websocket\r\n"
 		"Connection: Upgrade\r\n"
 		"Sec-WebSocket-Accept: " + generateAcceptKey(requestKey) + "\r\n"
-		"Access-Control-Allow-Origin: *\r\n"
-		"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
-		"Access-Control-Allow-Headers: Content-Type\r\n"
-		"Access-Control-Request-Headers: X-Requested-With, accept, content-type\r\n\r\n";
+		//"Sec-Websocket-Protocol: chat\r\n" // <- not included, if not present in request
+		"Accept-Encoding:\r\n"
+		//"Access-Control-Allow-Origin: *\r\n"
+		//"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+		//"Access-Control-Allow-Headers: Content-Type\r\n"
+		//"Access-Control-Request-Headers: X-Requested-With, accept, content-type\r\n"
+		"\r\n";
 
-	memcpy(requestHeader, response.c_str(), response.size() + 1);
+	memcpy(requestHeader, response.c_str(), response.size());
 
-	return response.size() + 1;
+	return response.size();
 }
 
 void webSocketConnection::handleInitialWrite(const boost::system::error_code& error, size_t length)
@@ -114,16 +117,16 @@ void webSocketConnection::handleInitialWrite(const boost::system::error_code& er
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
 
-	/*webSocketMessage msg(buffer);
-
-	msg.setMasked(false);
-
-	msg.setPayload("HELLO");
-
-	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
-		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
-		boost::asio::placeholders::error,
-		boost::asio::placeholders::bytes_transferred));*/
+//	webSocketMessage msg(buffer);
+//
+//	msg.setMasked(false);
+//
+//	msg.setPayload("HELLO");
+//
+//	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
+//		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
+//		boost::asio::placeholders::error,
+//		boost::asio::placeholders::bytes_transferred));
 }
 
 #pragma endregion
@@ -140,15 +143,21 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 	cout << "REQUEST";
 
 	if (msg.isMasked())
-		cout << " MASKED";
+		cout << " MASKED\n";
+
+	cout << "FLAGS: ";
+	msg.cOutFlags();
+	cout << "\r\n";
+	cout << "PAYLOAD LENGTH: " << msg.getPayloadLength() << "\r\n";
 
 	cout << "\r\n-------------------------\r\n" << msg.getPayload() << "\r\n\r\n";
 
 	msg.setMasked(false);
 
-	msg.setPayload("BLUBB\0");
+	msg.setPayload("BLUBB");
 
 	cout << "\r\nPAYLOAD LENGTH: " << msg.getPayloadLength() << "\r\n";
+	cout << "COMPLETE LENGTH: " << msg.getLength() << endl;
 
 	msg.cOutFlags();
 

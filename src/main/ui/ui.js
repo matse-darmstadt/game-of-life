@@ -143,7 +143,7 @@ $(function () {
 				try {
 					
 					//connection = new _.WebSocket('ws://' + prompt('Server IP:'));
-					connection = new _.WebSocket('ws://localhost:1233');
+					connection = new _.WebSocket('ws://localhost:1234');
 					connection.onopen = function () {
 						//connection.send('PLAY');
 						connection.send('PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____PLAY____');

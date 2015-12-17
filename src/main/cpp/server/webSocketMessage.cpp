@@ -109,9 +109,9 @@ void webSocketMessage::setMasked(bool masked)
 
 void webSocketMessage::setPayload(string payload)
 {
-	setPayloadLength(payload.size() + 1);
+	setPayloadLength(payload.size());
 
-	memcpy(data + getHeaderLength(), payload.c_str(), payload.size() + 1);
+	memcpy(data + getHeaderLength(), payload.c_str(), payload.size());
 }
 
 void webSocketMessage::cOutFlags()
