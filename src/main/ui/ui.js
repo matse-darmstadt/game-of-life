@@ -215,10 +215,10 @@ $(function () {
 			if (!connection || connection == null) {
 				try {
 					
-					connection = new _.WebSocket('wss://' + prompt('Hostname:'));
+					connection = new _.WebSocket('ws://172.20.60.70:80');
 					
 					connection.onopen = function () {
-						connection.send('PLAY');
+						connection.send(JSON.stringify(renderData));
 					};
 					
 					connection.onclose = function () {
@@ -228,17 +228,11 @@ $(function () {
 					};
 					
 					connection.onmessage = function (e) {
-						if (e.data == 'PLAY') {
-							mousePos.x = mousePos.y = null;
-							gameState = refresh = true;
-							canvas.style.cursor = 'default';
-							canvas.style.borderColor = '#008744';
-						} else if (e.data == 'PAUSE')
-							setPauseFrame();
-						else {
-							renderData = _.JSON.parse(e.data);
-							refresh = true;
-						}
+						renderData = _.JSON.parse(e.data);
+						mousepos.x = mousepos.y = null;
+						gamestate = refresh = true;
+						canvas.style.cursor = 'default';
+						canvas.style.bordercolor = '#008744';
 					};
 					
 					connection.onerror = function () {
@@ -252,12 +246,14 @@ $(function () {
 					alert('An error occured and the connection is closed!');
 				}
 			} else
-				connection.send('PLAY');
+				connection.send(JSON.stringify(renderData));
 		};
 		
 		_.pause = function () {
-			if (connection && gameState)
+			if (connection && gameState) {
 				connection.send('PAUSE');
+				setPauseFrame();
+			}
 		};
 		
 		$('#play-button').click(play);

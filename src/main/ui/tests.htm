@@ -1,0 +1,17 @@
+<!DOCTPYE html>
+<html>
+<head>
+	<title>TESTS</title>
+</head>
+<body>
+	<script type="text/javascript">
+		var  test = 'DIES IST EIN TEST,  UM NICHT ZU SAGEN EIN SEHR LANGER TEST. AUßERDEM BEFINDET SICH EIN DOPPELTES  LEERZEICHEN IN DIESEM STRING. WENN DU ES FINDEST, DARFST DU ES BEHALTEN.';
+		
+		var ws = new WebSocket('ws://172.20.60.70:80');
+		
+		ws.onopen  = function () {
+			ws.send(test);
+		};
+	</script>
+</body>
+</html>
