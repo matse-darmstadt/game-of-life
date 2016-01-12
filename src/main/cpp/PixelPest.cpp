@@ -1,4 +1,5 @@
 #include "server/webSocketServer.h"
+#include "PixelPest.h"
 #include <iostream>
 
 int main()
@@ -15,4 +16,21 @@ int main()
 	//}
 
 	return 0;
+}
+
+
+PixelPest::PixelPest(void):running(true)
+{
+}
+
+
+PixelPest::~PixelPest(void)
+{
+}
+
+void PixelPest::run(){
+
+	while(running) {
+				
+	}
 }
