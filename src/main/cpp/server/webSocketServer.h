@@ -7,7 +7,7 @@
 class webSocketServer
 {
 public:
-	webSocketServer(boost::asio::io_service& ioService);
+	webSocketServer(boost::asio::io_service& ioService, std::function<std::function<void(std::string&&)>(std::function<void(std::string&&)>)> onNewConnectionCallback);
 
 private:
 	void startAccept();
@@ -16,6 +16,8 @@ private:
 		const boost::system::error_code& error);
 
 	tcp::acceptor acceptor;
+
+	std::function<std::function<void(std::string&&)>(std::function<void(std::string&&)>)> onNewConnectionCallback;
 };
 
 #endif WEB_SOCKET_SERVER

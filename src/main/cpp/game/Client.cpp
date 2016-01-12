@@ -1,10 +1,8 @@
 #include "Client.h"
 
-#include "Board.h"
-
-Client::Client(std::function<void(std::string)> sendDataFunction): playground(nullptr), sendDataFunction(sendDataFunction)
+Client::Client(std::function<void(std::string&&)> sendDataFunction): playground(nullptr), sendDataFunction(sendDataFunction)
 {
-	
+
 }
 
 

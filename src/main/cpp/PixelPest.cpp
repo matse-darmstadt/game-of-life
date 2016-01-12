@@ -1,36 +1,48 @@
-#include "server/webSocketServer.h"
 #include "PixelPest.h"
+#include "server/webSocketServer.h"
 #include <iostream>
 
 int main()
 {
-	//try
-	//{
-		boost::asio::io_service io_service;
-		webSocketServer server(io_service);
-		io_service.run();
-	//}
-	//catch (std::exception& e)
-	//{
-		//std::cerr << e.what() << std::endl;
-	//}
+	PixelPest server = PixelPest();
 
 	return 0;
 }
 
-
-PixelPest::PixelPest(void):running(true)
+PixelPest::PixelPest()
 {
+	// start websocket server
+	boost::asio::io_service io_service;
+	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
+	io_service.run();
 }
 
-
-PixelPest::~PixelPest(void)
+std::function<void(std::string&&)> PixelPest::onNewConnection(std::function<void(std::string&&)> writeCallback)
 {
+	Client newClient = Client(writeCallback);
+
+	clients.push_back(newClient);
+
+	asignNeighbours();
+
+	return std::bind(&Client::setPopulateFields, newClient, placeholders::_1);
 }
 
-void PixelPest::run(){
+void PixelPest::asignNeighbours()
+{
+	int size = clients.size();
 
-	while(running) {
+	for (int i = 0; i < size; i++)
+	{
+		int left = i - 1;
+		if (left == -1)
+			left = size - 1;
 
+		int right = i + 1;
+		if (right == size)
+			right = 0;
+
+		clients[i].playground->setWestBoard(clients[left].playground);
+		clients[i].playground->setEastBoard(clients[right].playground);
 	}
 }

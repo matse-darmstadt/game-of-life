@@ -1,16 +1,20 @@
 #pragma once
 
 //möglichst wenig in Headerfiles einbinden!!
+#include <functional>
+#include <vector>
+#include "game/Client.h"
 
 class PixelPest
 {
 private:
-	bool running;
-public:
-	PixelPest(void);
-	~PixelPest(void);
+	std::vector<Client> clients;
 
-	void run();
-	void stop();
+	std::function<void(std::string&&)> onNewConnection(std::function<void(std::string&&)> writeCallback);
+
+	void asignNeighbours();
+
+public:
+	PixelPest();
 };
 

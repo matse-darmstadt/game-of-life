@@ -3,8 +3,8 @@
 
 using namespace std;
 
-webSocketServer::webSocketServer(boost::asio::io_service& ioService)
-	: acceptor(ioService, tcp::endpoint(tcp::v4(), 1234))
+webSocketServer::webSocketServer(boost::asio::io_service& ioService, std::function<std::function<void(std::string&&)>(std::function<void(std::string&&)>)> onNewConnectionCallback)
+	: acceptor(ioService, tcp::endpoint(tcp::v4(), 1234)), onNewConnectionCallback(onNewConnectionCallback)
 {
 	startAccept();
 }
@@ -26,7 +26,12 @@ void webSocketServer::handleAccept(webSocketConnection::webSocketConnectionPoint
 	if (!error)
 	{
 		//newConnection->test();
-		newConnection->setCallBack([=](string msg){ newConnection->writeMsg(msg); });
+		//newConnection->setCallBack([=](string msg){ newConnection->writeMsg(msg); });
+
+		std::function<void(std::string&&)> readCallback = onNewConnectionCallback(std::bind(&webSocketConnection::writeMsg, newConnection.get(), std::placeholders::_1));
+
+		newConnection->setCallBack(readCallback);
+
 		newConnection->start();
 	}
 
