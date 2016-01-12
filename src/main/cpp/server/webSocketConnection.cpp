@@ -29,19 +29,19 @@ void webSocketConnection::start()
 {
 	auto self = shared_from_this();
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		[this, self](boost::system::error_code error, std::size_t length)
 	{
 		if (error)
 			return;
 
-		buffer[length] = '\0';
+		readBuffer[length] = '\0';
 
-		cout << "REQUEST\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
+		cout << "REQUEST\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
-		uint responseSize = generateInitialResponse(buffer);
+		uint responseSize = generateInitialResponse(readBuffer);
 
-		boost::asio::async_write(socket, boost::asio::buffer(buffer, responseSize),
+		boost::asio::async_write(socket, boost::asio::buffer(readBuffer, responseSize),
 			boost::bind(&webSocketConnection::handleInitialWrite, self,
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
@@ -110,9 +110,9 @@ void webSocketConnection::handleInitialWrite(const boost::system::error_code& er
 	if (error)
 		return;
 
-	cout << "RESPONSE\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
+	cout << "RESPONSE\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
@@ -138,18 +138,18 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 	if (error)
 		return;
 
-	webSocketMessage msg(buffer);
+	webSocketMessage msg(readBuffer);
 
-	//msg.cOutFlags();
+	msg.cOutFlags();
 
 	// here we get our board or a client request to pause
-	cout << "Board data or PAUSE: "<<	msg.getPayload() << endl;
+	cout << "Received data: "<<	msg.getPayload() << endl;
 
 	// use the callback function on the payload and send it back to the client
 	// or do nothing on PAUSE
 	readCallBack(msg.getPayload());
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
@@ -157,10 +157,12 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 
 void webSocketConnection::handleWrite(const boost::system::error_code& error, size_t length)
 {
-//	if (error)
-//		return;
-//
-//	webSocketMessage msg(buffer);
+	if (error)
+		return;
+
+	webSocketMessage msg(writeBuffer);
+
+	cout << "Send data: " << msg.getPayload() << endl;
 //
 //	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
 //		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
@@ -170,13 +172,18 @@ void webSocketConnection::handleWrite(const boost::system::error_code& error, si
 
 void webSocketConnection::writeMsg(string payload)
 {
-	webSocketMessage msg(buffer);
+	webSocketMessage msg(writeBuffer);
+
+	//msg.setMasked(false);
+	msg.setResponseHeader();
 
 	msg.setPayload(payload);
 
-	msg.setMasked(false);
+	msg.cOutFlags();
 
-	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
+	cout << "Try to send data: " << msg.getPayload() << endl;
+
+	boost::asio::async_write(socket, boost::asio::buffer(writeBuffer, msg.getLength()),
 			boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));

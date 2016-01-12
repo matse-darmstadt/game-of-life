@@ -55,7 +55,9 @@ private:
 
 	tcp::socket socket;
 
-	char buffer[9000];
+	char readBuffer[0xffff];
+
+	char writeBuffer[0xffff];
 };
 
 #endif WEB_SOCKET_CONNECTION

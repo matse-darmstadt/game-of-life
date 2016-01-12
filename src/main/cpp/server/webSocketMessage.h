@@ -32,6 +32,12 @@ public:
 
 	void setMasked(bool masked);
 
+	void setFin(bool fin);
+
+	void setOPCode(int code);
+
+	void setResponseHeader();
+
 	void setPayloadLength(ulong length);
 
 	void cOutFlags();
