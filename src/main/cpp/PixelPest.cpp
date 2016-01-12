@@ -31,6 +31,6 @@ PixelPest::~PixelPest(void)
 void PixelPest::run(){
 
 	while(running) {
-				
+
 	}
 }

@@ -9,7 +9,7 @@ Board::Board(uint rangeX, uint rangeY):
 	rangeY(rangeY),
 	west(nullptr), east(nullptr), north(nullptr), south(nullptr)
 {
-		
+
 
 	//new alloziert speicher im Heap <---------------------------
 	boardOfLife = new bool*[rangeX];			// boardOfLife ist pointer zu einem array von pointern
@@ -86,17 +86,17 @@ string Board::toJson()
 					// cString: ...\0
 					// stringStream: <--- gut für einen String der erweitert werden soll (allozieren)
 	stringstream jsonStream;
-	
+
 	jsonStream<< "{\"width\":" << rangeX<< ",\"height\":" << rangeY << ",\"populatedFields\":[";
 	bool isFirstPosition = true;
-	for(Position& position: populatedFields)			
+	for(Position& position: populatedFields)
 	{
 		if(isFirstPosition){						//Trick um etwas nur das erste mal zu tun!
 			isFirstPosition=false;
 		}
 		else
 		{
-			jsonStream << ',' ;	
+			jsonStream << ',' ;
 		}
 		jsonStream << position.x << ',' << position.y;
 	}
@@ -126,7 +126,7 @@ void Board::setEastBoard(Board* eastBoard)
 	{
 		east = eastBoard;
 	}
-	
+
 void Board::setSouthBoard(Board* southBoard)
 {
 		south = southBoard;
@@ -151,7 +151,7 @@ Board* Board::getNorthBoard()
 {
 	return north;
 }
-	
+
 Board* Board::getSouthBoard()
 {
 	return south;
@@ -183,7 +183,7 @@ vector<Position> Board::calculateNextStep()
 			}
 		}
 	}
-		
+
 	// kill all fields that died this turn
 	for(auto& field: dyingFields)
 	{
@@ -237,7 +237,7 @@ uint Board::countNeighbors(uint x, uint y)
 		uint countingNeighbors = 0;
 		for(int dx = -1; dx<2; dx++){
 			for(int dy = -1; dy<2; dy++){
-				if((dx==0 && dy==0)==false)			// oder (dx!=0 || dy!=0) 
+				if((dx==0 && dy==0)==false)			// oder (dx!=0 || dy!=0)
 				{
 					if(isAlive(x+dx,y+dy))
 					{
