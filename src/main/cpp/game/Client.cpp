@@ -1,6 +1,7 @@
 #include "Client.h"
 
-Client::Client(std::function<void(std::string&&)> sendDataFunction): playground(nullptr), sendDataFunction(sendDataFunction)
+Client::Client(std::function<void(std::string&&)> sendDataFunction, std::function<void()> onReady)
+	: playground(nullptr), sendDataFunction(sendDataFunction), onReady(onReady)
 {
 
 }
@@ -15,6 +16,8 @@ void Client::setPopulateFields(std::string json)
 	if(playground == nullptr)
 	{
 		playground = Board::fromJson(json);
+
+		onReady();
 	}
 	else
 	{

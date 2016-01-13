@@ -10,8 +10,11 @@ class Client
 {
 private:
 	std::function<void(std::string&&)> sendDataFunction;
+
+	std::function<void()> onReady;
 public:
-	Client(std::function<void(std::string&&)> sendDataFunction);
+	Client(std::function<void(std::string&&)> sendDataFunction, std::function<void()> onReady);
+
 	~Client(void);		//Destruktor
 
 	std::string getBoardJson();

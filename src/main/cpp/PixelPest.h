@@ -8,11 +8,13 @@
 class PixelPest
 {
 private:
-	std::vector<Client> clients;
+	std::vector<Client*> clients;
 
 	std::function<void(std::string&&)> onNewConnection(std::function<void(std::string&&)> writeCallback);
 
-	void asignNeighbours();
+	void onClientReady();
+
+	void assignNeighbours();
 
 public:
 	PixelPest();
