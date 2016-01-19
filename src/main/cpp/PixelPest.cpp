@@ -11,10 +11,8 @@ int main()
 }
 
 PixelPest::PixelPest()
-	: timer(io_service), turn(0)
+	: timer(io_service), turn(1), timerInterval(50)
 {
-	timerInterval = 50;
-
 	clients.reserve(1024);
 
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
@@ -111,11 +109,11 @@ void PixelPest::testBoard()
 {
 	Board* test = Board::fromJson("{\"width\":90,\"height\":97,\"populatedFields\":[0,0,1,0,3,0,0,1]}");
 
-	test->calculateNextStep(0);
+	test->calculateNextStep(1);
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 
-	test->calculateNextStep(1);
+	test->calculateNextStep(2);
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 }

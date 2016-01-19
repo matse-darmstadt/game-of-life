@@ -9,7 +9,7 @@
 Board::Board(uint rangeX, uint rangeY):
 	rangeX(rangeX),
 	rangeY(rangeY),
-	west(nullptr), east(nullptr), north(nullptr), south(nullptr), prevTurn(0)
+	west(nullptr), east(nullptr), north(nullptr), south(nullptr), prevTurn(UINT_MAX)
 {
 
 
@@ -183,13 +183,14 @@ uint Board::getRangeY()
 
 vector<Position> Board::calculateNextStep(uint turn)
 {
+
 	populatedFields.clear();
 
 	for(uint x = 0; x <rangeX; x++)
 	{
 		for(uint y = 0; y <rangeY; y++)
 		{
-			if(willBeAlive(x,y,turn)){
+			if (willBeAlive(x, y, turn - 1)){
 				populatedFields.emplace_back(x,y);
 			}
 		}
@@ -198,6 +199,8 @@ vector<Position> Board::calculateNextStep(uint turn)
 	bool* tmp = prevBoardOfLife;
 	prevBoardOfLife = boardOfLife;
 	boardOfLife = tmp;
+
+	prevTurn = turn - 1;
 
 	// kill all fields that died this turn
 	for(int i=0; i!= rangeX*rangeY; i++){
@@ -243,6 +246,10 @@ bool Board::isAlive(int x, int y, uint turn)
 			}
 			return false;
 		}
+
+		if (prevTurn == turn)
+			return prevBoardOfLife[CoordToPos(x, y)];
+
 		return boardOfLife[CoordToPos(x, y)];
 	}
 
