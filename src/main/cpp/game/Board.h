@@ -36,6 +36,8 @@ public:
 
 	void setPopulatedFields(string json);
 
+	int getNum(const char* jc);
+
 
 	// Wir setzen die Verkn�pfungen zwischen den Feldern (Bildschirmen)
 	void setWestBoard(Board* westBoard);
