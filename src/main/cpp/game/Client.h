@@ -12,6 +12,9 @@ private:
 	std::function<void(std::string&&)> sendDataFunction;
 
 	std::function<void()> onReady;
+	void setPopulateFields(std::string json);
+	bool paused;
+
 public:
 	Client(std::function<void(std::string&&)> sendDataFunction, std::function<void()> onReady);
 
@@ -19,7 +22,9 @@ public:
 
 	std::string getBoardJson();
 
-	void setPopulateFields(std::string json);
+	void handleMessage(std::string msg);
+
+	bool isPaused();
 
 	void renderAndSend();
 

@@ -1,6 +1,6 @@
 #pragma once
 
-//möglichst wenig in Headerfiles einbinden!!
+//mï¿½glichst wenig in Headerfiles einbinden!!
 #include <functional>
 #include <vector>
 #include <boost/asio/io_service.hpp>
@@ -27,5 +27,6 @@ private:
 
 public:
 	PixelPest();
+	bool isPaused();
 };
 

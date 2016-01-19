@@ -1,7 +1,7 @@
 #include "Client.h"
 
 Client::Client(std::function<void(std::string&&)> sendDataFunction, std::function<void()> onReady)
-	: playground(nullptr), sendDataFunction(sendDataFunction), onReady(onReady)
+	: playground(nullptr), sendDataFunction(sendDataFunction), onReady(onReady), paused(true)
 {
 
 }
@@ -33,5 +33,21 @@ void Client::renderAndSend()
 		sendDataFunction(playground->toJson());
 	}
 }
+void Client::handleMessage(std::string msg)
+{
+	if (msg == "PAUSE")
+	{
+		paused = true;
+	}
+	else
+	{
+		paused = false;
+		setPopulateFields(msg);
+	}
+}
 
+bool Client::isPaused()
+{
+	return paused;
+}
 
