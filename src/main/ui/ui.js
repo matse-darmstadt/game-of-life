@@ -221,6 +221,7 @@ $(function () {
 						var tmp = JSON.stringify(renderData);
 						//console.log(tmp);
 						connection.send(tmp);
+						gameState = true;
 					};
 					
 					connection.onclose = function () {
@@ -230,12 +231,14 @@ $(function () {
 					};
 					
 					connection.onmessage = function (e) {
+						if (!gameState)
+							return;
 						//console.log(e);
 						renderData = _.JSON.parse(e.data);
 						mousePos.x = mousePos.y = null;
-						gamestate = refresh = true;
+						refresh = true;
 						canvas.style.cursor = 'default';
-						canvas.style.bordercolor = '#008744';
+						canvas.style.borderColor = '#008744';
 					};
 					
 					connection.onerror = function () {
@@ -252,6 +255,7 @@ $(function () {
 				var tmp = JSON.stringify(renderData);
 				//console.log(tmp);
 				connection.send(tmp);
+				gameState = true;
 			}
 		};
 		
