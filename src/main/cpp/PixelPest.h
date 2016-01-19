@@ -27,6 +27,8 @@ private:
 
 	void testBoard();
 
+	uint turn;
+
 public:
 	PixelPest();
 

@@ -4,22 +4,24 @@
 #include <string>
 #include <string.h>
 
+#define CoordToPos(x, y) x + y * rangeX
 
 Board::Board(uint rangeX, uint rangeY):
 	rangeX(rangeX),
 	rangeY(rangeY),
-	west(nullptr), east(nullptr), north(nullptr), south(nullptr)
+	west(nullptr), east(nullptr), north(nullptr), south(nullptr), prevTurn(0)
 {
 
 
 	//new alloziert speicher im Heap <---------------------------
-	boardOfLife = new bool*[rangeX];			// boardOfLife ist pointer zu einem array von pointern
+	boardOfLife = new bool[rangeX * rangeY];
+	prevBoardOfLife = new bool[rangeX * rangeY];
 	for(uint x = 0; x <rangeX; x++)
 	{
-		boardOfLife[x] = new bool[rangeY];		// boardOfLife[x] ist ein array von pointern
 		for(uint y = 0; y <rangeY; y++)
 		{
-			boardOfLife[x][y] = false;
+			boardOfLife[CoordToPos(x, y)] = false;
+			prevBoardOfLife[CoordToPos(x, y)] = false;
 		}
 	}
 }
@@ -51,6 +53,7 @@ int Board::getNum(const char* jc)
 }
 
 void Board::setPopulatedFields(string json) {
+
 	killAllFields();
 	const char* json_c = json.c_str();
 	json_c = strchr(json_c, '[')+1;
@@ -69,12 +72,9 @@ void Board::setPopulatedFields(string json) {
 
 void Board::killAllFields()
 {
-	for(uint x = 0; x <rangeX; x++)
+	for (Position& pos: populatedFields)
 	{
-		for(uint y = 0; y <rangeY; y++)
-		{
-			boardOfLife[x][y]=false;
-		}
+		boardOfLife[CoordToPos(pos.x, pos.y)] = false;
 	}
 }
 
@@ -82,7 +82,7 @@ void Board::reviveField(uint x,uint y)
 {
 	if(x<rangeX || x>=0 ||y<rangeY || y>=0)
 	{
-		boardOfLife[x][y]=true;
+		boardOfLife[CoordToPos(x, y)]=true;
 	}
 	else
 	{
@@ -127,7 +127,7 @@ void Board::setPopulatedFields(vector<uint> populatedX, vector<uint> populatedY)
 		{
 			uint x = populatedX[boxNumber];
 			uint y = populatedY[boxNumber];
-			boardOfLife[x][y] = true;
+			boardOfLife[CoordToPos(x, y)] = true;
 		}
 	}
 
@@ -181,79 +181,81 @@ uint Board::getRangeY()
 	return rangeY;
 }
 
-vector<Position> Board::calculateNextStep()
+vector<Position> Board::calculateNextStep(uint turn)
 {
 	populatedFields.clear();
 
-	vector<Position> dyingFields;
 	for(uint x = 0; x <rangeX; x++)
 	{
 		for(uint y = 0; y <rangeY; y++)
 		{
-			if(willBeAlive(x,y)){
+			if(willBeAlive(x,y,turn)){
 				populatedFields.emplace_back(x,y);
-			} else {
-				dyingFields.emplace_back(x,y);
 			}
 		}
 	}
 
+	bool* tmp = prevBoardOfLife;
+	prevBoardOfLife = boardOfLife;
+	boardOfLife = tmp;
+
 	// kill all fields that died this turn
-	for(auto& field: dyingFields)
-	{
-		boardOfLife[field.x][field.y] = false;
+	for(int i=0; i!= rangeX*rangeY; i++){
+		boardOfLife[i] = false;
 	}
 
 	// revive all fields that stayed alive or were animated this turn
 	for (auto& field : populatedFields)
 	{
-		boardOfLife[field.x][field.y] = true;
+		boardOfLife[CoordToPos(field.x, field.y)] = true;
 	}
 
 	return populatedFields;
 }
 
-bool Board::isAlive(int x, int y)
+bool Board::isAlive(int x, int y, uint turn)
 	{
 		if(x<0)
 		{
 			if(west!=nullptr){
-				return west->isAlive(west->rangeX-1,y);
+				return west->isAlive(west->rangeX-1,y, turn);
 			}
 			return false;
 		}
 		if(y<0)
 		{
 			if(north!=nullptr){
-				return north->isAlive(x,north->rangeY-1);
+				return north->isAlive(x,north->rangeY-1, turn);
 			}
 			return false;
 		}
 		if(x>(int)rangeX-1)
 		{
 			if(east!=nullptr){
-				return east->isAlive(0,y);
+				return east->isAlive(0,y, turn);
 			}
 			return false;
 		}
 		if(y>(int)rangeY-1)
 		{
 			if(south!=nullptr){
-				return south->isAlive(x,0);
+				return south->isAlive(x,0, turn);
 			}
 			return false;
 		}
-		return boardOfLife[x][y];
+		return boardOfLife[CoordToPos(x, y)];
 	}
 
-uint Board::countNeighbors(uint x, uint y)
+uint Board::countNeighbors(uint x, uint y, uint turn)
 	{
 		uint countingNeighbors = 0;
-		for(int dx = -1; dx<2; dx++){
-			for(int dy = -1; dy<2; dy++){
+		for(int dx = -1; dx<2; dx++)
+		{
+			for(int dy = -1; dy<2; dy++)
+			{
 				if((dx==0 && dy==0)==false)			// oder (dx!=0 || dy!=0)
 				{
-					if(isAlive(x+dx,y+dy))
+					if(isAlive(x+dx,y+dy, turn))
 					{
 						countingNeighbors++;
 					}
@@ -263,9 +265,9 @@ uint Board::countNeighbors(uint x, uint y)
 		return countingNeighbors;
 	}
 
-bool Board::willBeAlive(uint x, uint y)						//
+bool Board::willBeAlive(uint x, uint y, uint turn)						//
 	{
-		uint numberOfNeighbors = countNeighbors(x,y);
+		uint numberOfNeighbors = countNeighbors(x,y, turn);
 		if(numberOfNeighbors<2 || numberOfNeighbors>3)
 		{
 			return false;
@@ -274,7 +276,7 @@ bool Board::willBeAlive(uint x, uint y)						//
 		{
 			return true;
 		}
-		return boardOfLife[x][y];
+		return boardOfLife[CoordToPos(x, y)];
 	}
 
 // Methoden sollten immer den Status �ndern (logik implementierern) ODER den aktuallen Status ausgeben, nicht beides!

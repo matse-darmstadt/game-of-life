@@ -17,7 +17,9 @@ private:
 	Board* north;
 	Board* south;
 
-	bool** boardOfLife;
+	uint prevTurn;
+	bool* prevBoardOfLife;
+	bool* boardOfLife;
 
 	vector<Position> populatedFields;
 
@@ -29,11 +31,11 @@ private:
 
 	void reviveField(uint x, uint y);
 
-	bool isAlive(int x, int y);
+	bool isAlive(int x, int y, uint turn);
 
-	uint countNeighbors(uint x, uint y);
+	uint countNeighbors(uint x, uint y, uint turn);
 
-	bool willBeAlive(uint x, uint y);
+	bool willBeAlive(uint x, uint y, uint turn);
 
 	static int getNum(const char* jc);
 
@@ -66,7 +68,7 @@ public:
 
 	uint getRangeY();
 
-	vector<Position> calculateNextStep();
+	vector<Position> calculateNextStep(uint turn);
 
 	std::string toJson();
 

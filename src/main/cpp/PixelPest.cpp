@@ -7,12 +7,11 @@
 int main()
 {
 	PixelPest server;
-
 	return 0;
 }
 
 PixelPest::PixelPest()
-	: timer(io_service)
+	: timer(io_service), turn(0)
 {
 	clients.reserve(1024);
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
@@ -35,8 +34,9 @@ void PixelPest::logicLoop()
 	{
 		for (auto& client: clients)
 		{
-			client.renderAndSend();
+			client.renderAndSend(turn);
 		}
+		turn++;
 	}
 }
 
@@ -89,11 +89,11 @@ void PixelPest::testBoard()
 {
 	Board* test = Board::fromJson("{\"width\":90,\"height\":97,\"populatedFields\":[0,0,1,0,3,0,0,1]}");
 
-	test->calculateNextStep();
+	test->calculateNextStep(0);
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 
-	test->calculateNextStep();
+	test->calculateNextStep(1);
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 }

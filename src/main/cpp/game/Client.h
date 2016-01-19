@@ -26,7 +26,7 @@ public:
 
 	bool isPaused();
 
-	void renderAndSend();
+	void renderAndSend(uint turn);
 
 	Board* playground;
 };

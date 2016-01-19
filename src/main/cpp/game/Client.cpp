@@ -25,11 +25,11 @@ void Client::setPopulateFields(std::string json)
 	}
 }
 
-void Client::renderAndSend()
+void Client::renderAndSend(uint turn)
 {
 	if(playground != nullptr)
 	{
-		playground->calculateNextStep();
+		playground->calculateNextStep(turn);
 		sendDataFunction(playground->toJson());
 	}
 }
