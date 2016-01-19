@@ -67,14 +67,14 @@ $(function () {
 	
 	_.tool = 0;
 	
-	var fieldsPerRow = 50;
+	var fieldsPerRow = 1;
 	
 	var tmp = Number(prompt('How many fields per row do you want?'));
 	if (tmp === tmp && tmp > fieldsPerRow)
 		fieldsPerRow = tmp;
 	
-	var fieldSize = _.Math.round(canvas.width / fieldsPerRow);
-	console.log(fieldSize);
+	var fieldSize = (canvas.width / fieldsPerRow) | 0;
+	
 	var mousePos = {
 		px: null,
 		py: null,
@@ -89,11 +89,11 @@ $(function () {
 		'oRequestAnimationFrame',
 		'msRequestAnimationFrame'
 	], renderData = {
-		height: _.Math.round(canvas.height / fieldSize),
-		width: _.Math.round(canvas.width / fieldSize),
+		height: (canvas.height / fieldSize) | 0,
+		width: (canvas.width / fieldSize) | 0,
 		populatedFields: []
 	};
-	console.log(renderData);
+	
 	for (var index = 0, length = possibleRenderMethods.length; index != length; ++index)
 		if (_[possibleRenderMethods[index]]) {
 			renderMethod = _[possibleRenderMethods[index]];
