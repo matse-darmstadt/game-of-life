@@ -31,10 +31,12 @@ void PixelPest::logicLoop()
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
 
 	int size = clients.size();
-
-	for (auto& client: clients)
+	if (!isPaused())
 	{
-		client.renderAndSend();
+		for (auto& client: clients)
+		{
+			client.renderAndSend();
+		}
 	}
 }
 
@@ -44,7 +46,7 @@ std::function<void(std::string&&)> PixelPest::onNewConnection(std::function<void
 
 	clients.push_back(newClient);
 
-	return std::bind(&Client::setPopulateFields, &clients[clients.size()-1], placeholders::_1);
+	return std::bind(&Client::handleMessage, &clients[clients.size()-1], placeholders::_1);
 }
 
 void PixelPest::onClientReady()
@@ -83,3 +85,12 @@ void PixelPest::testBoard()
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 }
+
+bool PixelPest::isPaused()
+{
+	for (int i = 0; i < clients.size(); i++)
+		if (clients[i].isPaused())
+			return true;
+	return false;
+}
+
