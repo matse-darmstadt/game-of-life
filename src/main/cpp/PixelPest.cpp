@@ -14,10 +14,13 @@ int main()
 PixelPest::PixelPest()
 	: timer(io_service)
 {
+	timerInterval = 50;
+
 	clients.reserve(1024);
+
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
 
-	timer.expires_from_now(boost::posix_time::milliseconds(1));
+	timer.expires_from_now(boost::posix_time::milliseconds(timerInterval));
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
 
 	//TEST
@@ -28,7 +31,7 @@ PixelPest::PixelPest()
 
 void PixelPest::logicLoop()
 {
-	timer.expires_from_now(boost::posix_time::milliseconds(1));
+	timer.expires_from_now(boost::posix_time::milliseconds(timerInterval));
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
 
 	if (!isPaused())
@@ -46,7 +49,26 @@ std::function<void(std::string&&)> PixelPest::onNewConnection(std::function<void
 
 	clients.push_back(newClient);
 
-	return std::bind(&Client::handleMessage, &clients[clients.size()-1], placeholders::_1);
+	return std::bind(&PixelPest::handleMessage, this, placeholders::_1, &clients[clients.size() - 1]);
+}
+
+void PixelPest::handleMessage(std::string msg, Client* client)
+{
+	std::string prefix = msg.substr(0, 2);
+
+	if (prefix == "--")
+	{
+		std::string command = msg.substr(2, 3);
+
+		if (command == "FPS")
+		{
+			float fps = atof(msg.substr(6).c_str());
+
+			timerInterval = 1000 / fps;
+		}
+	}
+	else
+		client->handleMessage(msg);
 }
 
 void PixelPest::onClientReady()

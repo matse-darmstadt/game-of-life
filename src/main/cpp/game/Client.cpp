@@ -33,6 +33,7 @@ void Client::renderAndSend()
 		sendDataFunction(playground->toJson());
 	}
 }
+
 void Client::handleMessage(std::string msg)
 {
 	if (msg.compare("PAUSE") == 0)
