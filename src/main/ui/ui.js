@@ -213,14 +213,10 @@ $(function () {
 		
 		var buildConnection = function () {
 			
-			connection = new _.WebSocket('ws://localhost:1234');
+			connection = new _.WebSocket('ws://' + prompt('Host:') + ':1234');
 			
 			connection.onopen = function () {
 				connected = true;
-				// var tmp = JSON.stringify(renderData);
-				// //console.log(tmp);
-				// connection.send(tmp);
-				// gameState = true;
 			};
 			
 			connection.onclose = function () {
@@ -232,7 +228,7 @@ $(function () {
 			connection.onmessage = function (e) {
 				if (!gameState)
 					return;
-				//console.log(e);
+				
 				renderData = _.JSON.parse(e.data);
 				mousePos.x = mousePos.y = null;
 				refresh = true;
