@@ -25,6 +25,8 @@ private:
 
 	boost::asio::deadline_timer timer;
 
+	void testBoard();
+
 public:
 	PixelPest();
 };

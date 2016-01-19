@@ -37,7 +37,7 @@ void webSocketConnection::start()
 
 		readBuffer[length] = '\0';
 
-		cout << "REQUEST\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
+		//cout << "REQUEST\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
 		uint responseSize = generateInitialResponse(readBuffer);
 
@@ -110,7 +110,7 @@ void webSocketConnection::handleInitialWrite(const boost::system::error_code& er
 	if (error)
 		return;
 
-	cout << "RESPONSE\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
+	//cout << "RESPONSE\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
 	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
@@ -140,10 +140,10 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 
 	webSocketMessage msg(readBuffer);
 
-	msg.cOutFlags();
+	//msg.cOutFlags();
 
 	// here we get our board or a client request to pause
-	cout << "Received data: "<<	msg.getPayload() << endl;
+	//cout << "Received data: "<<	msg.getPayload() << endl;
 
 	// use the callback function on the payload and send it back to the client
 	// or do nothing on PAUSE
@@ -162,7 +162,7 @@ void webSocketConnection::handleWrite(const boost::system::error_code& error, si
 
 	webSocketMessage msg(writeBuffer);
 
-	cout << "Send data: " << msg.getPayload() << endl;
+	//cout << "Send data: " << msg.getPayload() << endl;
 //
 //	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
 //		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
@@ -179,9 +179,9 @@ void webSocketConnection::writeMsg(string payload)
 
 	msg.setPayload(payload);
 
-	msg.cOutFlags();
+	//msg.cOutFlags();
 
-	cout << "Try to send data: " << msg.getPayload() << endl;
+	//cout << "Try to send data: " << msg.getPayload() << endl;
 
 	boost::asio::async_write(socket, boost::asio::buffer(writeBuffer, msg.getLength()),
 			boost::bind(&webSocketConnection::handleWrite, shared_from_this(),

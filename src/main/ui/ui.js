@@ -74,7 +74,7 @@ $(function () {
 		fieldsPerRow = tmp;
 	
 	var fieldSize = _.Math.round(canvas.width / fieldsPerRow);
-	
+	console.log(fieldSize);
 	var mousePos = {
 		px: null,
 		py: null,
@@ -93,7 +93,7 @@ $(function () {
 		width: _.Math.round(canvas.width / fieldSize),
 		populatedFields: []
 	};
-	
+	console.log(renderData);
 	for (var index = 0, length = possibleRenderMethods.length; index != length; ++index)
 		if (_[possibleRenderMethods[index]]) {
 			renderMethod = _[possibleRenderMethods[index]];
@@ -219,7 +219,7 @@ $(function () {
 					
 					connection.onopen = function () {
 						var tmp = JSON.stringify(renderData);
-						console.log(tmp);
+						//console.log(tmp);
 						connection.send(tmp);
 					};
 					
@@ -230,7 +230,7 @@ $(function () {
 					};
 					
 					connection.onmessage = function (e) {
-						console.log(e);
+						//console.log(e);
 						renderData = _.JSON.parse(e.data);
 						mousePos.x = mousePos.y = null;
 						gamestate = refresh = true;
@@ -250,7 +250,7 @@ $(function () {
 				}
 			} else {
 				var tmp = JSON.stringify(renderData);
-				console.log(tmp);
+				//console.log(tmp);
 				connection.send(tmp);
 			}
 		};

@@ -16,15 +16,18 @@ PixelPest::PixelPest()
 {
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
 
-	timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	timer.expires_from_now(boost::posix_time::milliseconds(1));
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
+
+	//TEST
+	testBoard();
 
 	io_service.run();
 }
 
 void PixelPest::logicLoop()
 {
-	timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	timer.expires_from_now(boost::posix_time::milliseconds(1));
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
 
 	int size = clients.size();
@@ -66,4 +69,17 @@ void PixelPest::assignNeighbours()
 		clients[i].playground->setWestBoard(clients[left].playground);
 		clients[i].playground->setEastBoard(clients[right].playground);
 	}
+}
+
+void PixelPest::testBoard()
+{
+	Board* test = Board::fromJson("{\"width\":90,\"height\":97,\"populatedFields\":[0,0,1,0,3,0,0,1]}");
+
+	test->calculateNextStep();
+
+	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
+
+	test->calculateNextStep();
+
+	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
 }

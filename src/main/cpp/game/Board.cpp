@@ -191,7 +191,7 @@ vector<Position> Board::calculateNextStep()
 	}
 
 	// revive all fields that stayed alive or were animated this turn
-	for(auto& field: dyingFields)
+	for (auto& field : populatedFields)
 	{
 		boardOfLife[field.x][field.y] = true;
 	}
