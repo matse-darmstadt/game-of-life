@@ -19,11 +19,11 @@ PixelPest::PixelPest()
 
 std::function<void(std::string&&)> PixelPest::onNewConnection(std::function<void(std::string&&)> writeCallback)
 {
-	Client newClient = Client(writeCallback, std::bind(&PixelPest::onClientReady, this));
+	Client newClient(writeCallback, std::bind(&PixelPest::onClientReady, this));
 
-	clients.push_back(&newClient);
+	clients.push_back(newClient);
 
-	return std::bind(&Client::setPopulateFields, newClient, placeholders::_1);
+	return std::bind(&Client::setPopulateFields, &clients[clients.size()-1], placeholders::_1);
 }
 
 void PixelPest::onClientReady()
@@ -45,7 +45,7 @@ void PixelPest::assignNeighbours()
 		if (right == size)
 			right = 0;
 
-		clients[i]->playground->setWestBoard(clients[left]->playground);
-		clients[i]->playground->setEastBoard(clients[right]->playground);
+		clients[i].playground->setWestBoard(clients[left].playground);
+		clients[i].playground->setEastBoard(clients[right].playground);
 	}
 }
