@@ -26,15 +26,28 @@ Board::Board(uint rangeX, uint rangeY):
 
 Board* Board::fromJson(string json) {
 	const char* json_c = json.c_str();
-
-	json_c = strchr(json_c, ':')+1;
-	int width = atoi(json_c);
-
-	json_c = strchr(json_c, ':')+1;
-	int height = atoi(json_c);
+	// json format: 		{"width":90,"height":97,"populatedFields":[0,0,1,0,3,0,0,1]}
+	// alternate format:	{"populatedFields":[0,0,1,0,3,0,0,1],"height":97,"width":90}
+	int width, height = -1;
+	do
+	{
+		json_c = strchr(json_c, '"') + 1; // opening quotes
+		if (strncmp(json_c, "width", 5) == 0)
+			width = getNum(json_c);
+		if (strncmp(json_c, "height", 6) == 0)
+			height = getNum(json_c);
+		json_c = strchr(json_c, '"') + 1; // closing quotes
+	} while (width == -1 || height == -1);
+	// reading the array of coordinates on the board
 	Board* newBoard = new Board(width, height);
 	newBoard->setPopulatedFields(json);
 	return newBoard;
+}
+
+int Board::getNum(const char* jc)
+{
+	jc = strchr(jc, ':') + 1;
+	return atoi(jc);
 }
 
 void Board::setPopulatedFields(string json) {
