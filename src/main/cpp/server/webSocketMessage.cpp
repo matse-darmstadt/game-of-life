@@ -19,12 +19,11 @@ ulong webSocketMessage::getPayloadLength()
 	ushort length = *(tmp + 1) & ((1 << 7) - 1);
 
 	if (length == 126) {
-		ushort extended_length = *reinterpret_cast<ushort*>(data) + 1;
+		uint16_t extended_length = *(reinterpret_cast<uint16_t*>(data) + 1);
 		length = ntohs(extended_length);
 	}
-
-	if (length == 127) {
-		uint super_extended_length = *reinterpret_cast<uint*>(data) + 1;
+	else if (length == 127) {
+		uint32_t super_extended_length = *(reinterpret_cast<uint32_t*>(data)+1);
 		length = ntohl(super_extended_length);
 	}
 
@@ -41,7 +40,7 @@ string webSocketMessage::getPayload()
 	char* tmp = reinterpret_cast<char*>(alloca(length));
 
 	uchar* payload = reinterpret_cast<uchar*>(data) + getHeaderLength();
-	uchar* mask = reinterpret_cast<uchar*>(data) + 2;
+	uchar* mask = reinterpret_cast<uchar*>(data) + getHeaderLength() - 4 * isMasked();
 	for (uint i = 0; i != length; i++)
 		tmp[i] = payload[i] ^ mask[i % 4];
 
@@ -112,6 +111,35 @@ void webSocketMessage::setPayload(string payload)
 	setPayloadLength(payload.size());
 
 	memcpy(data + getHeaderLength(), payload.c_str(), payload.size());
+}
+
+void webSocketMessage::setFin(bool fin)
+{
+	char& firstByte = *data;
+
+	firstByte = firstByte & (0xff >> 1);
+
+	firstByte = firstByte | (fin << 7);
+}
+
+void webSocketMessage::setOPCode(int code)
+{
+	char& firstByte = *data;
+
+	firstByte = firstByte & (0xff << 4);
+
+	firstByte = firstByte | (code & 0x0f);
+}
+
+void webSocketMessage::setResponseHeader()
+{
+	*data = 0;
+
+	setFin(true);
+
+	setOPCode(1);
+
+	setMasked(false);
 }
 
 void webSocketMessage::cOutFlags()

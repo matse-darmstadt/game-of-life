@@ -21,13 +21,23 @@ public:
 
 	static webSocketConnectionPointer create(boost::asio::io_service& ioService);
 
+	void writeMsg(string payload);
+
 	tcp::socket& getSocket();
 
 	void start();
 
 	void test();
 
+	void setCallBack(std::function<void (std::string&&)> f){
+		readCallBack = f;
+	}
+
 private:
+	std::function<void (std::string&&)> readCallBack;
+
+
+
 	webSocketConnection(boost::asio::io_service& ioService);
 
 	void handleInitialWrite(const boost::system::error_code& error, size_t length);
@@ -35,6 +45,7 @@ private:
 	void handleWrite(const boost::system::error_code& error, size_t length);
 
 	void handleRead(const boost::system::error_code& error, size_t length);
+
 
 	uint generateInitialResponse(char* requestHeader);
 
@@ -44,7 +55,9 @@ private:
 
 	tcp::socket socket;
 
-	char buffer[9000];
+	char readBuffer[0xffff];
+
+	char writeBuffer[0xffff];
 };
 
 #endif WEB_SOCKET_CONNECTION

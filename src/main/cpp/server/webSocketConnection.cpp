@@ -29,19 +29,19 @@ void webSocketConnection::start()
 {
 	auto self = shared_from_this();
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		[this, self](boost::system::error_code error, std::size_t length)
 	{
 		if (error)
 			return;
 
-		buffer[length] = '\0';
+		readBuffer[length] = '\0';
 
-		cout << "REQUEST\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
+		cout << "REQUEST\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
-		uint responseSize = generateInitialResponse(buffer);
+		uint responseSize = generateInitialResponse(readBuffer);
 
-		boost::asio::async_write(socket, boost::asio::buffer(buffer, responseSize),
+		boost::asio::async_write(socket, boost::asio::buffer(readBuffer, responseSize),
 			boost::bind(&webSocketConnection::handleInitialWrite, self,
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
@@ -94,7 +94,7 @@ uint webSocketConnection::generateInitialResponse(char* requestHeader)
 		"Sec-WebSocket-Accept: " + generateAcceptKey(requestKey) + "\r\n"
 		//"Sec-Websocket-Protocol: chat\r\n" // <- not included, if not present in request
 		"Accept-Encoding:\r\n"
-		//"Access-Control-Allow-Origin: *\r\n"
+		"Access-Control-Allow-Origin: *\r\n"
 		//"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 		//"Access-Control-Allow-Headers: Content-Type\r\n"
 		//"Access-Control-Request-Headers: X-Requested-With, accept, content-type\r\n"
@@ -110,9 +110,9 @@ void webSocketConnection::handleInitialWrite(const boost::system::error_code& er
 	if (error)
 		return;
 
-	cout << "RESPONSE\r\n-------------------------\r\n" << string(buffer, length) << "\r\n";
+	cout << "RESPONSE\r\n-------------------------\r\n" << string(readBuffer, length) << "\r\n";
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
 		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
@@ -138,38 +138,19 @@ void webSocketConnection::handleRead(const boost::system::error_code& error, siz
 	if (error)
 		return;
 
-	webSocketMessage msg(buffer);
-
-	cout << "REQUEST";
-
-	if (msg.isMasked())
-		cout << " MASKED\n";
-
-	cout << "FLAGS: ";
-	msg.cOutFlags();
-	cout << "\r\n";
-	cout << "PAYLOAD LENGTH: " << msg.getPayloadLength() << "\r\n";
-
-	cout << "\r\n-------------------------\r\n" << msg.getPayload() << "\r\n\r\n";
-
-	msg.setMasked(false);
-
-	msg.setPayload("BLUBB");
-
-	cout << "\r\nPAYLOAD LENGTH: " << msg.getPayloadLength() << "\r\n";
-	cout << "COMPLETE LENGTH: " << msg.getLength() << endl;
+	webSocketMessage msg(readBuffer);
 
 	msg.cOutFlags();
 
-	cout << "RESPONSE";
+	// here we get our board or a client request to pause
+	cout << "Received data: "<<	msg.getPayload() << endl;
 
-	if (msg.isMasked())
-		cout << " MASKED";
+	// use the callback function on the payload and send it back to the client
+	// or do nothing on PAUSE
+	readCallBack(msg.getPayload());
 
-	cout << "\r\n-------------------------\r\n" << msg.getPayload() << "\r\n\r\n";
-
-	boost::asio::async_write(socket, boost::asio::buffer(buffer, msg.getLength()),
-		boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
+	socket.async_read_some(boost::asio::buffer(readBuffer, sizeof(readBuffer)),
+		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
 }
@@ -179,47 +160,68 @@ void webSocketConnection::handleWrite(const boost::system::error_code& error, si
 	if (error)
 		return;
 
-	webSocketMessage msg(buffer);
+	webSocketMessage msg(writeBuffer);
 
-	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
-		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
-		boost::asio::placeholders::error,
-		boost::asio::placeholders::bytes_transferred));
+	cout << "Send data: " << msg.getPayload() << endl;
+//
+//	socket.async_read_some(boost::asio::buffer(buffer, sizeof(buffer)),
+//		boost::bind(&webSocketConnection::handleRead, shared_from_this(),
+//		boost::asio::placeholders::error,
+//		boost::asio::placeholders::bytes_transferred));
+}
+
+void webSocketConnection::writeMsg(string payload)
+{
+	webSocketMessage msg(writeBuffer);
+
+	//msg.setMasked(false);
+	msg.setResponseHeader();
+
+	msg.setPayload(payload);
+
+	msg.cOutFlags();
+
+	cout << "Try to send data: " << msg.getPayload() << endl;
+
+	boost::asio::async_write(socket, boost::asio::buffer(writeBuffer, msg.getLength()),
+			boost::bind(&webSocketConnection::handleWrite, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
 }
 
 #pragma endregion
 
-void webSocketConnection::test() {
-	char* EXAMPLE_REQUEST = "GET /chat HTTP/1.1\r\n"
-		"Host: server.example.com\r\n"
-		"Upgrade: websocket\r\n"
-		"Connection: Upgrade\r\n"
-		"Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n"
-		"Sec-WebSocket-Protocol: chat, superchat\r\n"
-		"Sec-WebSocket-Version: 13\r\n"
-		"Origin: http://example.com\r\n";
-	string EXAMPLE_REQUEST_KEY = "x3JJHMbDL1EzLkh9GBhXDw==";
-	string EXAMPLE_ACCEPT_KEY = "HSmrc0sMlYUkAGmm5OPpG2HaGWk=";
-	assert(getRequestKey(EXAMPLE_REQUEST) == EXAMPLE_REQUEST_KEY);
-
-	assert(generateAcceptKey(EXAMPLE_REQUEST_KEY) == EXAMPLE_ACCEPT_KEY);
-
-	char testBuffer[100];
-
-	webSocketMessage msg(testBuffer);
-
-	msg.setMasked(true);
-
-	assert(msg.isMasked());
-
-	msg.setMasked(false);
-
-	assert(msg.isMasked() == false);
-
-	msg.setPayload("HANS");
-
-	assert(msg.getPayload() == "HANS");
-
-	std::cout << "all tests successful" << std::endl;
-
-}
+//void webSocketConnection::test() {
+//	char* EXAMPLE_REQUEST = "GET /chat HTTP/1.1\r\n"
+//		"Host: server.example.com\r\n"
+//		"Upgrade: websocket\r\n"
+//		"Connection: Upgrade\r\n"
+//		"Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n"
+//		"Sec-WebSocket-Protocol: chat, superchat\r\n"
+//		"Sec-WebSocket-Version: 13\r\n"
+//		"Origin: http://example.com\r\n";
+//	string EXAMPLE_REQUEST_KEY = "x3JJHMbDL1EzLkh9GBhXDw==";
+//	string EXAMPLE_ACCEPT_KEY = "HSmrc0sMlYUkAGmm5OPpG2HaGWk=";
+//	assert(getRequestKey(EXAMPLE_REQUEST) == EXAMPLE_REQUEST_KEY);
+//
+//	assert(generateAcceptKey(EXAMPLE_REQUEST_KEY) == EXAMPLE_ACCEPT_KEY);
+//
+//	char testBuffer[100];
+//
+//	webSocketMessage msg(testBuffer);
+//
+//	msg.setMasked(true);
+//
+//	assert(msg.isMasked());
+//
+//	msg.setMasked(false);
+//
+//	assert(msg.isMasked() == false);
+//
+//	msg.setPayload("HANS");
+//
+//	assert(msg.getPayload() == "HANS");
+//
+//	std::cout << "all tests successful" << std::endl;
+//
+//}
