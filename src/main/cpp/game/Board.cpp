@@ -28,7 +28,7 @@ Board* Board::fromJson(string json) {
 	const char* json_c = json.c_str();
 	// json format: 		{"width":90,"height":97,"populatedFields":[0,0,1,0,3,0,0,1]}
 	// alternate format:	{"populatedFields":[0,0,1,0,3,0,0,1],"height":97,"width":90}
-	int width, height = -1;
+	int width = -1, height = -1;
 	do
 	{
 		json_c = strchr(json_c, '"') + 1; // opening quotes

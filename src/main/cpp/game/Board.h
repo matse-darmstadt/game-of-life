@@ -27,16 +27,21 @@ private:
 
 	void killAllFields();
 
-	void reviveField(uint x,uint y);
+	void reviveField(uint x, uint y);
 
+	bool isAlive(int x, int y);
+
+	uint countNeighbors(uint x, uint y);
+
+	bool willBeAlive(uint x, uint y);
+
+	static int getNum(const char* jc);
 
 public:
 
 	static Board* fromJson(string json);
 
 	void setPopulatedFields(string json);
-
-	int getNum(const char* jc);
 
 
 	// Wir setzen die Verkn�pfungen zwischen den Feldern (Bildschirmen)
@@ -64,13 +69,6 @@ public:
 	vector<Position> calculateNextStep();
 
 	std::string toJson();
-
-private:
-	bool isAlive(int x, int y);
-
-	uint countNeighbors(uint x, uint y);
-
-	bool willBeAlive(uint x, uint y);
 
 };
 
