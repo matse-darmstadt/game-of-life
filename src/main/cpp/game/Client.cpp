@@ -35,7 +35,7 @@ void Client::renderAndSend()
 }
 void Client::handleMessage(std::string msg)
 {
-	if (msg == "PAUSE")
+	if (msg.compare("PAUSE") == 0)
 	{
 		paused = true;
 	}
