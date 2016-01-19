@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <assert.h>
+#include <string>
 
 #include "Position.h"
 
@@ -11,10 +12,10 @@ class Board
 {
 private:
 	const uint rangeX, rangeY;
-	Board* east;
-	Board* south;
 	Board* west;
+	Board* east;
 	Board* north;
+	Board* south;
 
 	bool** boardOfLife;
 
@@ -36,7 +37,7 @@ public:
 	void setPopulatedFields(string json);
 
 
-	// Wir setzen die Verknüpfungen zwischen den Feldern (Bildschirmen)
+	// Wir setzen die Verknï¿½pfungen zwischen den Feldern (Bildschirmen)
 	void setWestBoard(Board* westBoard);
 
 	void setEastBoard(Board* eastBoard);

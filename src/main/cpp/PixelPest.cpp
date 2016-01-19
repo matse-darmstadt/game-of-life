@@ -6,7 +6,7 @@
 
 int main()
 {
-	PixelPest server = PixelPest();
+	PixelPest server;
 
 	return 0;
 }

@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <string>
+#include <string.h>
 
 
 Board::Board(uint rangeX, uint rangeY):
@@ -84,7 +85,7 @@ void Board::reviveField(uint x,uint y)
 string Board::toJson()
 {
 					// cString: ...\0
-					// stringStream: <--- gut für einen String der erweitert werden soll (allozieren)
+					// stringStream: <--- gut fï¿½r einen String der erweitert werden soll (allozieren)
 	stringstream jsonStream;
 
 	jsonStream<< "{\"width\":" << rangeX<< ",\"height\":" << rangeY << ",\"populatedFields\":[";
@@ -263,5 +264,5 @@ bool Board::willBeAlive(uint x, uint y)						//
 		return boardOfLife[x][y];
 	}
 
-// Methoden sollten immer den Status ändern (logik implementierern) ODER den aktuallen Status ausgeben, nicht beides!
+// Methoden sollten immer den Status ï¿½ndern (logik implementierern) ODER den aktuallen Status ausgeben, nicht beides!
 // Eine Methode sollte im Idealfall nur eine Sache tun!
