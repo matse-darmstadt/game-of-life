@@ -1,5 +1,7 @@
 #include "PixelPest.h"
 #include "server/webSocketServer.h"
+#include <boost/date_time/posix_time/posix_time_duration.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 
 int main()
@@ -10,11 +12,27 @@ int main()
 }
 
 PixelPest::PixelPest()
+	: timer(io_service)
 {
-	// start websocket server
-	boost::asio::io_service io_service;
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
+
+	timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
+
 	io_service.run();
+}
+
+void PixelPest::logicLoop()
+{
+	timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
+
+	int size = clients.size();
+
+	for (auto& client: clients)
+	{
+		client.renderAndSend();
+	}
 }
 
 std::function<void(std::string&&)> PixelPest::onNewConnection(std::function<void(std::string&&)> writeCallback)

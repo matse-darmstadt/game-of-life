@@ -48,7 +48,7 @@ void Board::setPopulatedFields(string json) {
 			reviveField(x,y);
 			// jump to next ,
 			// if it does not exist we are done with the array (json_c will be null)
-			json_c = strchr(json_c, ':')+1;
+			json_c = strchr(json_c, ',')+1;
 		} while(json_c-1!=NULL);
 	}
 }

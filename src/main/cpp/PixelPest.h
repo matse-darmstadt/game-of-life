@@ -3,6 +3,9 @@
 //möglichst wenig in Headerfiles einbinden!!
 #include <functional>
 #include <vector>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "game/Client.h"
 
 class PixelPest
@@ -15,6 +18,12 @@ private:
 	void onClientReady();
 
 	void assignNeighbours();
+
+	void logicLoop();
+
+	boost::asio::io_service io_service;
+
+	boost::asio::deadline_timer timer;
 
 public:
 	PixelPest();
