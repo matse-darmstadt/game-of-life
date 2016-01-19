@@ -25,9 +25,13 @@ private:
 
 	boost::asio::deadline_timer timer;
 
+	void handleMessage(std::string msg, Client* client);
+
 	void testBoard();
 
 	uint turn;
+
+	uint timerInterval;
 
 public:
 	PixelPest();

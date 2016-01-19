@@ -213,14 +213,11 @@ $(function () {
 		
 		var buildConnection = function () {
 			
+			//connection = new _.WebSocket('ws://' + prompt('Host:') + ':1234');
 			connection = new _.WebSocket('ws://localhost:1234');
 			
 			connection.onopen = function () {
 				connected = true;
-				// var tmp = JSON.stringify(renderData);
-				// //console.log(tmp);
-				// connection.send(tmp);
-				// gameState = true;
 			};
 			
 			connection.onclose = function () {
@@ -232,7 +229,7 @@ $(function () {
 			connection.onmessage = function (e) {
 				if (!gameState)
 					return;
-				//console.log(e);
+				
 				renderData = _.JSON.parse(e.data);
 				mousePos.x = mousePos.y = null;
 				refresh = true;
@@ -275,6 +272,12 @@ $(function () {
 			}
 		};
 		
+		_.fpsChange = function () {
+			var value = $('#fps-range').val();
+			
+			$('#fps').text(value);
+		};
+		
 		$('#play-button').click(play);
 		
 		$('#pause-button').click(_.pause);
@@ -304,6 +307,13 @@ $(function () {
 		$('#spawn-pattern').click(function () {
 			_.pause();
 			_.tool = _.patterns[$('#spawn-pattern-dropdown').val()];
+		});
+		
+		$('#fps-range').change(function () {
+			if (!connection || !connected)
+				return;
+			
+			connection.send('--FPS ' + $('#fps-range').val());
 		});
 		
 		buildConnection();
