@@ -18,6 +18,8 @@ private:
 	tcp::acceptor acceptor;
 
 	std::function<std::function<void(std::string&&)>(std::function<void(std::string&&)>)> onNewConnectionCallback;
+
+	std::vector<webSocketConnection::webSocketConnectionPointer> connections;
 };
 
 #endif WEB_SOCKET_SERVER

@@ -61,7 +61,7 @@ $(function () {
 	ctx.fillStyle = '#ffa700';
 	ctx.strokeStyle = '#fff';
 	
-	var connection;
+	var connection, connected = false;
 	
 	var gameState = false;
 	
@@ -211,47 +211,56 @@ $(function () {
 			canvas.style.borderColor = '#d62d20';
 		};
 		
+		var buildConnection = function () {
+			
+			connection = new _.WebSocket('ws://localhost:1234');
+			
+			connection.onopen = function () {
+				connected = true;
+				// var tmp = JSON.stringify(renderData);
+				// //console.log(tmp);
+				// connection.send(tmp);
+				// gameState = true;
+			};
+			
+			connection.onclose = function () {
+				setPauseFrame();
+				connection = null;
+				alert('Connection closed!');
+			};
+			
+			connection.onmessage = function (e) {
+				if (!gameState)
+					return;
+				//console.log(e);
+				renderData = _.JSON.parse(e.data);
+				mousePos.x = mousePos.y = null;
+				refresh = true;
+				canvas.style.cursor = 'default';
+				canvas.style.borderColor = '#008744';
+			};
+			
+			connection.onerror = function () {
+				_.pause();
+				connection = null;
+				alert('An error occured and the connection is closed!');
+			};
+			
+		};
+		
 		var play = function () {
 			if (!connection || connection == null) {
 				try {
 					
-					connection = new _.WebSocket('ws://localhost:1234');
+					connected = false;
 					
-					connection.onopen = function () {
-						var tmp = JSON.stringify(renderData);
-						//console.log(tmp);
-						connection.send(tmp);
-						gameState = true;
-					};
-					
-					connection.onclose = function () {
-						setPauseFrame();
-						connection = null;
-						alert('Connection closed!');
-					};
-					
-					connection.onmessage = function (e) {
-						if (!gameState)
-							return;
-						//console.log(e);
-						renderData = _.JSON.parse(e.data);
-						mousePos.x = mousePos.y = null;
-						refresh = true;
-						canvas.style.cursor = 'default';
-						canvas.style.borderColor = '#008744';
-					};
-					
-					connection.onerror = function () {
-						_.pause();
-						connection = null;
-						alert('An error occured and the connection is closed!');
-					};
+					buildConnection();
 					
 				} catch (exception) {
 					connection = null;
 					alert('An error occured and the connection is closed!');
 				}
-			} else {
+			} else if (connected) {
 				var tmp = JSON.stringify(renderData);
 				//console.log(tmp);
 				connection.send(tmp);
@@ -296,6 +305,8 @@ $(function () {
 			_.pause();
 			_.tool = _.patterns[$('#spawn-pattern-dropdown').val()];
 		});
+		
+		buildConnection();
 		
 	} else
 		_.alert('NO RENDER METHOD FOUND');

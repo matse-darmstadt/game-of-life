@@ -41,8 +41,9 @@ void Client::handleMessage(std::string msg)
 	}
 	else
 	{
-		paused = false;
 		setPopulateFields(msg);
+
+		paused = false;
 	}
 }
 

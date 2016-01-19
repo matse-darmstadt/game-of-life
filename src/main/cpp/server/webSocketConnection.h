@@ -58,6 +58,7 @@ private:
 	char readBuffer[0xffff];
 
 	char writeBuffer[0xffff];
+
 };
 
 #endif WEB_SOCKET_CONNECTION

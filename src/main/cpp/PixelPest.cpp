@@ -14,6 +14,7 @@ int main()
 PixelPest::PixelPest()
 	: timer(io_service)
 {
+	clients.reserve(1024);
 	webSocketServer server(io_service, std::bind(&PixelPest::onNewConnection, this, placeholders::_1));
 
 	timer.expires_from_now(boost::posix_time::milliseconds(1));
@@ -30,7 +31,6 @@ void PixelPest::logicLoop()
 	timer.expires_from_now(boost::posix_time::milliseconds(1));
 	timer.async_wait(boost::bind(&PixelPest::logicLoop, this));
 
-	int size = clients.size();
 	if (!isPaused())
 	{
 		for (auto& client: clients)
@@ -60,6 +60,9 @@ void PixelPest::assignNeighbours()
 
 	for (int i = 0; i < size; i++)
 	{
+		if (clients[i].playground == NULL)
+			return;
+
 		int left = i - 1;
 		if (left == -1)
 			left = size - 1;
@@ -73,6 +76,15 @@ void PixelPest::assignNeighbours()
 	}
 }
 
+bool PixelPest::isPaused()
+{
+	for (int i = 0; i < clients.size(); i++)
+		if (clients[i].isPaused())
+			return true;
+
+	return false;
+}
+
 void PixelPest::testBoard()
 {
 	Board* test = Board::fromJson("{\"width\":90,\"height\":97,\"populatedFields\":[0,0,1,0,3,0,0,1]}");
@@ -84,13 +96,5 @@ void PixelPest::testBoard()
 	test->calculateNextStep();
 
 	assert(test->toJson() == "{\"width\":90,\"height\":97,\"populatedFields\":[0,0,0,1,1,0,1,1]}");
-}
-
-bool PixelPest::isPaused()
-{
-	for (int i = 0; i < clients.size(); i++)
-		if (clients[i].isPaused())
-			return true;
-	return false;
 }
 

@@ -33,6 +33,8 @@ void webSocketServer::handleAccept(webSocketConnection::webSocketConnectionPoint
 		newConnection->setCallBack(readCallback);
 
 		newConnection->start();
+
+		connections.push_back(newConnection);
 	}
 
 	startAccept();
